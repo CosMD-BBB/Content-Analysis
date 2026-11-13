@@ -5,6 +5,7 @@ import { ContentActions, FavoriteButton, type ActionKey } from "@/components/con
 import { Gallery } from "@/components/gallery";
 import { Icon } from "@/components/icon";
 import { MediaUploader } from "@/components/media-uploader";
+import { PinComments } from "@/components/pin-comments";
 import { PlatformPreview } from "@/components/platform-preview";
 import { ManualPostRow, PublishButton } from "@/components/publish-controls";
 import { StatusSteps } from "@/components/status-steps";
@@ -116,16 +117,12 @@ export default async function ContentPage({ params }: { params: Promise<{ projec
           </section>
           <section className="card" id="comments">
             <div className="card-head"><h2>ความคิดเห็น</h2><span className="pill t-neutral plain">{d.comments.length}</span></div>
-            {d.comments.length ? (
-              <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-                {d.comments.map((m) => (
-                  <div className="comment" key={m.id}>
-                    <span className="av" style={{ background: "var(--accent)" }}>{m.userName.slice(0, 1)}</span>
-                    <div className="bubble"><div className="small"><b>{m.userName}</b> <span className="faint">{formatThai(m.createdAt, "datetime")}</span></div>{m.body}</div>
-                  </div>
-                ))}
-              </div>
-            ) : <p className="small muted">ยังไม่มีความคิดเห็น</p>}
+            <PinComments
+              projectId={projectId}
+              contentId={c.id}
+              media={d.media}
+              comments={d.comments.map((m) => ({ id: m.id, body: m.body, userName: m.userName, when: formatThai(m.createdAt, "datetime"), mediaId: m.mediaId, pinX: m.pinX, pinY: m.pinY, resolved: !!m.resolvedAt }))}
+            />
           </section>
           <section className="card">
             <div className="card-head"><h2>ประวัติการแก้ไข</h2></div>

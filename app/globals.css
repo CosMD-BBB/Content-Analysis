@@ -450,3 +450,13 @@ a.tile:hover { border-color: var(--accent); }
 .qcard2 { display: grid; grid-template-columns: 160px minmax(0, 1fr); gap: 18px; align-items: start; }
 .q-cover { display: block; }
 @media (max-width: 720px) { .qcard2 { grid-template-columns: minmax(0, 1fr); } .q-cover { max-width: 200px; } }
+.pin-stage { position: relative; cursor: crosshair; border-radius: 12px; overflow: hidden; background: var(--surface-2); max-width: 520px; }
+.pin-stage img { width: 100%; display: block; }
+.pin { position: absolute; transform: translate(-50%, -50%); width: 24px; height: 24px; border-radius: 50%; background: var(--bad); color: #fff; font-size: 12px; font-weight: 700; display: grid; place-items: center; box-shadow: 0 0 0 2px #fff, var(--shadow); pointer-events: auto; }
+.pin.done { background: var(--ok); }
+.pin.new { background: var(--accent); }
+.pin.inline { position: static; transform: none; width: 18px; height: 18px; font-size: 11px; box-shadow: none; }
+.bell summary { position: relative; }
+.bell-n { position: absolute; top: 2px; right: 2px; background: var(--bad); color: #fff; font-size: 10px; font-weight: 700; border-radius: 999px; min-width: 16px; height: 16px; display: grid; place-items: center; padding: 0 4px; }
+.bell-menu { left: auto; right: 0; width: min(360px, 90vw); max-height: 70vh; overflow-y: auto; }
+.bell-menu a.unread { background: var(--accent-soft); }

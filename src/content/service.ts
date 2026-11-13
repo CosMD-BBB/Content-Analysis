@@ -8,6 +8,7 @@ import {
 } from "../db/schema";
 import { ForbiddenError, NotFoundError } from "../lib/errors";
 import { bangkokTime, fromBangkokInput } from "../lib/time";
+import { notify, type NotifyKind } from "../notify/service";
 import { ACTION_LOG, nextStatus, type ContentAction } from "./state";
 import { contentInput, type ContentInput } from "./validation";
 
@@ -126,6 +127,8 @@ export async function applyAction(db: DB, actorId: string, contentId: string, ac
     if (opts.comment?.trim()) await tx.insert(comments).values({ contentId, userId: actorId, body: opts.comment.trim() });
     await logActivity(tx, content.projectId, actorId, ACTION_LOG[action], contentId);
   });
+  const kind: Partial<Record<ContentAction, NotifyKind>> = { submit: "submitted", requestChanges: "changes_requested", approve: "approved" };
+  if (kind[action]) await notify(db, kind[action]!, contentId, actorId);
   return { ok: true, status: next };
 }
 
