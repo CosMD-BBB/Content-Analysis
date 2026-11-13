@@ -30,7 +30,11 @@ export function PlatformPreview(props: {
   const ratio = frame.ratio.replace(":", " / ");
   const visual = m ? (
     m.kind === "video" ? (
-      <video className="pv-media" style={{ aspectRatio: ratio }} src={`/files/${m.storageKey}`} poster={m.thumbKey ? `/files/${m.thumbKey}` : undefined} controls playsInline preload="none" />
+      frame.layout === "vertical" ? (
+        <video className="pv-media" style={{ aspectRatio: ratio }} src={`/files/${m.storageKey}`} poster={m.thumbKey ? `/files/${m.thumbKey}` : undefined} autoPlay muted loop playsInline preload="metadata" />
+      ) : (
+        <video className="pv-media" style={{ aspectRatio: ratio }} src={`/files/${m.storageKey}`} poster={m.thumbKey ? `/files/${m.thumbKey}` : undefined} controls playsInline preload="none" />
+      )
     ) : (
       // eslint-disable-next-line @next/next/no-img-element
       <img className="pv-media" style={{ aspectRatio: ratio }} src={`/files/${m.storageKey}`} alt="" />

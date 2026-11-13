@@ -1,5 +1,6 @@
 import { and, desc, eq, gte, inArray, lt } from "drizzle-orm";
 import { can } from "../access/permissions";
+import { CATALOG } from "../channels/catalog";
 import type { DB } from "../db/client";
 import { activity, contentChannels, contents, metrics, users, type Role } from "../db/schema";
 import { addDaysKey, bangkokDayKey, fromBangkokInput } from "../lib/time";
@@ -20,7 +21,7 @@ export async function overview(db: DB, userId: string, projectId: string, role: 
     if (c.status === "changes" && (c.ownerId === userId || can(role, "editAny"))) push({ tone: "bad", icon: "pen", text: `แก้ตามคอมเมนต์: ${c.title}`, sub: "หัวหน้าขอให้แก้", content: c, anchor: "#comments" });
     if (c.status === "published" && can(role, "manual") && (c.ownerId === userId || can(role, "editAny")))
       for (const ch of c.channels.filter((x) => x.publishState === "manual_todo"))
-        push({ tone: "bad", icon: "hand", text: `โพสต์เอง: ${c.title}`, sub: ch.reason ?? "", content: c, anchor: "#channels" });
+        push({ tone: "bad", icon: "hand", text: `โพสต์เองที่ ${CATALOG[ch.platform].name}: ${c.title}`, sub: ch.reason ?? "", content: c, anchor: "#channels" });
     if (role === "creator" && c.ownerId === userId && (c.status === "idea" || c.status === "draft") && soon(c))
       push({ tone: "info", icon: "clock", text: `ทำให้เสร็จก่อนกำหนด: ${c.title}`, sub: "", content: c });
   }
