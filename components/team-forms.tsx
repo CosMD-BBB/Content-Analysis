@@ -1,7 +1,7 @@
 "use client";
 
 import { useActionState, useRef } from "react";
-import { addMemberAction, changeRoleAction, inviteAction, removeMemberAction } from "@/app/(app)/p/[projectId]/team/actions";
+import { addMemberAction, changeRoleAction, inviteAction, removeMemberAction, resetPasswordAction } from "@/app/(app)/p/[projectId]/team/actions";
 import { errText, ROLE_LABEL } from "@/src/i18n/th";
 import { ActionForm } from "./action-form";
 import { Icon } from "./icon";
@@ -65,6 +65,24 @@ export function InviteLink({ projectId }: { projectId: string }) {
         </div>
       )}
       {link && <span className="small muted">ส่งลิงก์นี้ให้คนที่จะเชิญ ใช้ได้ 1 ครั้งภายใน 7 วัน</span>}
+    </form>
+  );
+}
+
+/** เจ้าของระบบตั้งรหัสชั่วคราวให้สมาชิกที่ลืมรหัส (เมื่อยังไม่ได้ตั้งค่าส่งอีเมล) */
+export function ResetPassword({ userId, name }: { userId: string; name: string }) {
+  const [state, action] = useActionState(resetPasswordAction, undefined);
+  if (state?.ok)
+    return (
+      <span className="copy-box" style={{ display: "inline-flex" }}>
+        รหัสชั่วคราวของ {name}: <b>{String(state.data)}</b>
+        <button type="button" className="btn sm" onClick={() => navigator.clipboard.writeText(String(state.data)).then(() => toast("คัดลอกแล้ว"), () => {})}><Icon name="copy" size="sm" /></button>
+      </span>
+    );
+  return (
+    <form action={action} style={{ display: "inline-flex" }}>
+      <input type="hidden" name="userId" value={userId} />
+      <Submit className="btn sm ghost">รีเซ็ตรหัส</Submit>
     </form>
   );
 }

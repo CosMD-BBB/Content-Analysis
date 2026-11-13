@@ -48,3 +48,11 @@ export async function removeMemberAction(_: ActionResult, f: FormData) {
     return { ok: true, message: "นำออกจากโปรเจกต์แล้ว" };
   });
 }
+
+export async function resetPasswordAction(_: ActionResult, f: FormData) {
+  return act(async (u) => {
+    const { adminResetPassword } = await import("@/src/auth/service");
+    const temp = await adminResetPassword(getDb(), u.id, String(f.get("userId")));
+    return { ok: true, data: temp };
+  });
+}

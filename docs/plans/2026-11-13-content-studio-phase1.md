@@ -85,19 +85,19 @@ e2e/          happy-path.spec.ts
   - types/consts ที่ export จาก `schema.ts` ให้ทุก task ใช้: `PLATFORMS = ['facebook','instagram','youtube','tiktok','x','lemon8','line','web'] as const`, `type Platform`, `type Format = 'reel'|'video'|'image'|'carousel'|'article'`, `type ContentStatus = 'idea'|'draft'|'review'|'changes'|'approved'|'scheduled'|'published'`, `type Role = 'admin'|'manager'|'creator'|'analyst'`
   - `src/lib/time.ts`: `TZ = 'Asia/Bangkok'`; `fromBangkokInput(date: string /*YYYY-MM-DD*/, time: string /*HH:mm*/): Date`; `bangkokDayKey(d: Date): string /*YYYY-MM-DD*/`; `formatThai(d: Date, style: 'date'|'datetime'|'short'): string` (ปี พ.ศ., ชื่อเดือนย่อไทย เช่น `13 พ.ย. 2569 · 19:00 น.`)
 
-- [ ] **Step 1:** สร้างโปรเจกต์ Next.js 16 (TypeScript, App Router, Tailwind 4, ไม่มี `src/app` → ใช้ `app/` ที่ราก) และติดตั้งแพ็กเกจตาม Tech Stack; scripts: `dev`, `build`, `start`, `worker` (`tsx src/worker/index.ts`), `db:generate`, `db:migrate`, `test` (`vitest run`), `e2e`
-- [ ] **Step 2:** `scripts/test-db.sh` เริ่ม Postgres 16 ชั่วคราวใน `.tmp/pg` ด้วย `initdb`/`pg_ctl` ที่ port 54329 ถ้าไม่มี Docker แล้ว export `TEST_DATABASE_URL`; `tests/setup.ts` รัน migration หนึ่งครั้ง และ `TRUNCATE ... CASCADE` ทุกตารางก่อนแต่ละ test ไฟล์ integration
-- [ ] **Step 3: เขียน test ที่ล้มเหลว** `tests/unit/time.test.ts`
+- [x] **Step 1:** สร้างโปรเจกต์ Next.js 16 (TypeScript, App Router, Tailwind 4, ไม่มี `src/app` → ใช้ `app/` ที่ราก) และติดตั้งแพ็กเกจตาม Tech Stack; scripts: `dev`, `build`, `start`, `worker` (`tsx src/worker/index.ts`), `db:generate`, `db:migrate`, `test` (`vitest run`), `e2e`
+- [x] **Step 2:** `scripts/test-db.sh` เริ่ม Postgres 16 ชั่วคราวใน `.tmp/pg` ด้วย `initdb`/`pg_ctl` ที่ port 54329 ถ้าไม่มี Docker แล้ว export `TEST_DATABASE_URL`; `tests/setup.ts` รัน migration หนึ่งครั้ง และ `TRUNCATE ... CASCADE` ทุกตารางก่อนแต่ละ test ไฟล์ integration
+- [x] **Step 3: เขียน test ที่ล้มเหลว** `tests/unit/time.test.ts`
   ```ts
   test('19:00 Bangkok is 12:00 UTC', () => expect(fromBangkokInput('2026-11-13','19:00').toISOString()).toBe('2026-11-13T12:00:00.000Z'))
   test('00:30 Bangkok stays on its own day', () => expect(bangkokDayKey(fromBangkokInput('2026-11-14','00:30'))).toBe('2026-11-14'))
   test('thai format', () => expect(formatThai(new Date('2026-11-13T12:00:00Z'),'datetime')).toBe('13 พ.ย. 2569 · 19:00 น.'))
   ```
   และ `tests/integration/schema.test.ts`: insert membership ซ้ำ (projectId,userId) เดิม → throw; insert user อีเมล `A@x.com` แล้ว `a@x.com` → throw
-- [ ] **Step 4:** รัน `TZ=UTC npm test` → FAIL
-- [ ] **Step 5:** เขียน schema, client, time helpers; `npm run db:generate` ได้ไฟล์ใน `drizzle/`
-- [ ] **Step 6:** รัน `TZ=UTC npm test` → PASS และ `npm run build` → สำเร็จ
-- [ ] **Step 7:** Commit `feat: scaffold app, database schema and Bangkok time helpers`
+- [x] **Step 4:** รัน `TZ=UTC npm test` → FAIL
+- [x] **Step 5:** เขียน schema, client, time helpers; `npm run db:generate` ได้ไฟล์ใน `drizzle/`
+- [x] **Step 6:** รัน `TZ=UTC npm test` → PASS และ `npm run build` → สำเร็จ
+- [x] **Step 7:** Commit `feat: scaffold app, database schema and Bangkok time helpers`
 
 ### Task 2: สมัคร ล็อกอิน และ session
 
@@ -116,7 +116,7 @@ e2e/          happy-path.spec.ts
   - `requestPasswordReset(db, email): Promise<void>` (ส่งลิงก์ทางอีเมล อายุ 1 ชม.; อีเมลไม่มีในระบบ → ไม่บอกผู้ใช้ว่าไม่มี), `resetPassword(db, token, newPw): Promise<{ ok: boolean }>`; หน้า `app/(auth)/reset/page.tsx`
   - `currentUser(): Promise<User | null>` ใน `session.ts` (อ่าน cookie `cs_session`, httpOnly, secure ใน production, sameSite lax)
 
-- [ ] **Step 1: เขียน test ที่ล้มเหลว**
+- [x] **Step 1: เขียน test ที่ล้มเหลว**
   ```ts
   test('first user becomes super admin, second does not')
   test('email is case-insensitive: register A@x.com then a@x.com → email_taken')
@@ -127,10 +127,10 @@ e2e/          happy-path.spec.ts
   test('adminResetPassword by non-super-admin throws forbidden')
   test('reset token works once and expires after 1 hour')
   ```
-- [ ] **Step 2:** รัน `npm test tests/integration/auth.test.ts` → FAIL
-- [ ] **Step 3:** เขียน service (bcrypt cost 12), หน้า login/register ตามสไตล์ prototype, `middleware.ts` ส่งคนที่ไม่มี cookie ไป `/login`
-- [ ] **Step 4:** รัน test → PASS
-- [ ] **Step 5:** Commit `feat: email registration, login and sessions`
+- [x] **Step 2:** รัน `npm test tests/integration/auth.test.ts` → FAIL
+- [x] **Step 3:** เขียน service (bcrypt cost 12), หน้า login/register ตามสไตล์ prototype, `middleware.ts` ส่งคนที่ไม่มี cookie ไป `/login`
+- [x] **Step 4:** รัน test → PASS
+- [x] **Step 5:** Commit `feat: email registration, login and sessions`
 
 ### Task 3: สิทธิ์ตามบทบาท
 
@@ -147,11 +147,11 @@ e2e/          happy-path.spec.ts
   - `requireMember(db, userId, projectId): Promise<{ role: Role; isSuperAdmin: boolean }>` (ไม่เป็นสมาชิก → throw `ForbiddenError`; เจ้าของระบบได้สิทธิ์ `admin` ทุกโปรเจกต์)
   - `requirePerm(db, userId, projectId, perm): Promise<Role>`
 
-- [ ] **Step 1: เขียน test ที่ล้มเหลว**: ตารางทุกบทบาท × ทุกสิทธิ์ ตรงกับ README (เช่น `can('creator','approve') === false`, `can('analyst','metrics') === true`, `can('manager','channels') === false`); `canEditContent('creator', false, 'draft') === false`; `canEditContent('creator', true, 'review') === false`; `canEditContent('manager', false, 'published') === false`; integration: ผู้ใช้ไม่เป็นสมาชิก → `requireMember` throw
-- [ ] **Step 2:** รัน → FAIL
-- [ ] **Step 3:** เขียนโค้ด
-- [ ] **Step 4:** รัน → PASS
-- [ ] **Step 5:** Commit `feat: role permissions and project guards`
+- [x] **Step 1: เขียน test ที่ล้มเหลว**: ตารางทุกบทบาท × ทุกสิทธิ์ ตรงกับ README (เช่น `can('creator','approve') === false`, `can('analyst','metrics') === true`, `can('manager','channels') === false`); `canEditContent('creator', false, 'draft') === false`; `canEditContent('creator', true, 'review') === false`; `canEditContent('manager', false, 'published') === false`; integration: ผู้ใช้ไม่เป็นสมาชิก → `requireMember` throw
+- [x] **Step 2:** รัน → FAIL
+- [x] **Step 3:** เขียนโค้ด
+- [x] **Step 4:** รัน → PASS
+- [x] **Step 5:** Commit `feat: role permissions and project guards`
 
 ### Task 4: โปรเจกต์ สมาชิก และการเชิญ
 
@@ -172,7 +172,7 @@ e2e/          happy-path.spec.ts
   - `updateWorkTypes(db, actorId, projectId, list)`, `updatePillars(...)` (ต้องมีสิทธิ์ `team`)
   - cookie `cs_last_project` จำโปรเจกต์ล่าสุด; หลังล็อกอิน: ไม่มีโปรเจกต์ → `/waiting`, มี → โปรเจกต์ล่าสุด
 
-- [ ] **Step 1: เขียน test ที่ล้มเหลว**
+- [x] **Step 1: เขียน test ที่ล้มเหลว**
   ```ts
   test('non super admin cannot create project')
   test('new project has 8 work types, 5 pillars, 8 channels, creator is admin')
@@ -181,10 +181,10 @@ e2e/          happy-path.spec.ts
   test('invite token works once and expires after 7 days')
   test('cannot demote the last admin')
   ```
-- [ ] **Step 2:** รัน → FAIL
-- [ ] **Step 3:** เขียน service และหน้าเว็บ; หน้า `/waiting` แสดง "บัญชีของคุณพร้อมแล้ว รอแอดมินเพิ่มคุณเข้าโปรเจกต์ หรือเปิดลิงก์เชิญที่ได้รับ"; ตัวสลับโปรเจกต์อยู่บนสุดของ sidebar
-- [ ] **Step 4:** รัน → PASS
-- [ ] **Step 5:** Commit `feat: projects, members, invites and project switcher`
+- [x] **Step 2:** รัน → FAIL
+- [x] **Step 3:** เขียน service และหน้าเว็บ; หน้า `/waiting` แสดง "บัญชีของคุณพร้อมแล้ว รอแอดมินเพิ่มคุณเข้าโปรเจกต์ หรือเปิดลิงก์เชิญที่ได้รับ"; ตัวสลับโปรเจกต์อยู่บนสุดของ sidebar
+- [x] **Step 4:** รัน → PASS
+- [x] **Step 5:** Commit `feat: projects, members, invites and project switcher`
 
 ### Task 5: คอนเทนต์และขั้นตอนสถานะ
 
@@ -205,7 +205,7 @@ e2e/          happy-path.spec.ts
   - `moveContent(db, actorId, contentId, newDayKey): Promise<...>` (คงเวลาเดิม เปลี่ยนวัน; ห้ามถ้า `published`; ถ้า `scheduled` → กลับเป็น `review`)
   - `toggleFavorite(db, userId, contentId): Promise<boolean>`
 
-- [ ] **Step 1: เขียน test ที่ล้มเหลว**: ตาราง `nextStatus` ทุกคู่ที่สำคัญ (เช่น creator approve → null, requestChanges ไม่มีคอมเมนต์ → error `comment_required`, schedule เวลาผ่านไปแล้ว → `time_in_past`); integration:
+- [x] **Step 1: เขียน test ที่ล้มเหลว**: ตาราง `nextStatus` ทุกคู่ที่สำคัญ (เช่น creator approve → null, requestChanges ไม่มีคอมเมนต์ → error `comment_required`, schedule เวลาผ่านไปแล้ว → `time_in_past`); integration:
   ```ts
   test('editing a scheduled content sends it back to review')           // Review Focus 2
   test('update with old version → stale, nothing written')             // Review Focus 5
@@ -213,10 +213,10 @@ e2e/          happy-path.spec.ts
   test('every update writes a contentVersions row')
   test('move published content → forbidden')
   ```
-- [ ] **Step 2:** รัน → FAIL
-- [ ] **Step 3:** เขียนโค้ด
-- [ ] **Step 4:** รัน → PASS
-- [ ] **Step 5:** Commit `feat: content lifecycle, versions and validation`
+- [x] **Step 2:** รัน → FAIL
+- [x] **Step 3:** เขียนโค้ด
+- [x] **Step 4:** รัน → PASS
+- [x] **Step 5:** Commit `feat: content lifecycle, versions and validation`
 
 ### Task 6: อัปโหลดรูป/วิดีโอ และรูปย่อ
 
@@ -233,7 +233,7 @@ e2e/          happy-path.spec.ts
   - `<Cover content={...} size="sm"|"md"|"lg" />`: มีรูป → รูปย่อแรก; ไม่มี → ปกกราฟิก สีตามหมวด + ไอคอนรูปแบบงาน + ชื่องาน 2 บรรทัด
   - อัปโหลดวิดีโอใหญ่: route รับ stream ตรงไป storage (ไม่โหลดเข้าหน่วยความจำทั้งไฟล์); ตั้ง body size limit ของ Next ให้รองรับ 500 MB
 
-- [ ] **Step 1: เขียน test ที่ล้มเหลว**
+- [x] **Step 1: เขียน test ที่ล้มเหลว**
   ```ts
   test('heic is rejected with Thai message')              // Review Focus 4
   test('21 MB jpeg → รูปต้องไม่เกิน 20 MB')
@@ -241,10 +241,10 @@ e2e/          happy-path.spec.ts
   test('jpeg upload stores original and a 480px-wide webp thumb')
   test('creator cannot add media to someone else\'s content')
   ```
-- [ ] **Step 2:** รัน → FAIL
-- [ ] **Step 3:** เขียนโค้ด; uploader รองรับลากวางหลายไฟล์ แสดงความคืบหน้า และแสดงข้อความ error ใต้ไฟล์นั้น
-- [ ] **Step 4:** รัน → PASS
-- [ ] **Step 5:** Commit `feat: media uploads with thumbnails and generated covers`
+- [x] **Step 2:** รัน → FAIL
+- [x] **Step 3:** เขียนโค้ด; uploader รองรับลากวางหลายไฟล์ แสดงความคืบหน้า และแสดงข้อความ error ใต้ไฟล์นั้น
+- [x] **Step 4:** รัน → PASS
+- [x] **Step 5:** Commit `feat: media uploads with thumbnails and generated covers`
 
 ### Task 7: หน้าเว็บหลัก: ภาพรวม คลัง รายละเอียด ฟอร์ม และตัวอย่างตามแพลตฟอร์ม
 
@@ -259,11 +259,11 @@ e2e/          happy-path.spec.ts
   - หน้า: ภาพรวม (งานของฉัน, 7 วันข้างหน้าแบบมีรูปย่อ, ผลงานดีสุด, ความเคลื่อนไหว) · คลัง (ตารางมีรูปย่อ, ป้ายประเภทงาน, กรองตามสถานะ/ช่องทาง/ประเภทงาน/คน, ค้นหา, ดาว) · รายการโปรด · รายละเอียด (แกลเลอรีรูป, แท็บตัวอย่างต่อช่องทาง ใช้ caption ของช่องทางนั้นถ้ามี, ช่องทางและสถานะการโพสต์, ปุ่มตามสิทธิ์จาก `nextStatus`, ประวัติเวอร์ชัน) · ฟอร์มสร้าง/แก้ (ฟิลด์ตาม `contentInput`, แท็บแคปชันแยกช่องทาง, `captionWarnings`, ส่ง `expectedVersion`)
   - สไตล์ตาม prototype: tokens สีใน `app/globals.css` (คัดจาก `:root` ของ prototype), ฟอนต์ Anuphan + IBM Plex Sans Thai ผ่าน `next/font/google`
 
-- [ ] **Step 1: เขียน test ที่ล้มเหลว**: `previewFrame` ทุกคู่ข้างบน
-- [ ] **Step 2:** รัน → FAIL
-- [ ] **Step 3:** เขียน `preview.ts` แล้วสร้างหน้าและคอมโพเนนต์
-- [ ] **Step 4:** รัน test → PASS; `npm run build` → สำเร็จ; เปิด `npm run dev` ดูทุกหน้าด้วยบัญชี admin และ creator
-- [ ] **Step 5:** Commit `feat: overview, library, content detail with platform previews`
+- [x] **Step 1: เขียน test ที่ล้มเหลว**: `previewFrame` ทุกคู่ข้างบน
+- [x] **Step 2:** รัน → FAIL
+- [x] **Step 3:** เขียน `preview.ts` แล้วสร้างหน้าและคอมโพเนนต์
+- [x] **Step 4:** รัน test → PASS; `npm run build` → สำเร็จ; เปิด `npm run dev` ดูทุกหน้าด้วยบัญชี admin และ creator
+- [x] **Step 5:** Commit `feat: overview, library, content detail with platform previews`
 
 ### Task 8: ปฏิทินลากย้ายวันได้
 
@@ -278,11 +278,11 @@ e2e/          happy-path.spec.ts
   - `groupByDay(items: { scheduledAt: Date }[]): Record<string, T[]>` ใช้ `bangkokDayKey`
   - มุมมองเดือน/สัปดาห์; กรองตามช่องทาง สถานะ ประเภทงาน ผู้รับผิดชอบ; แต่ละงานมีรูปย่อเล็ก + เวลา + ชื่อ; ลาก (dnd-kit) ไปวันอื่นเรียก `moveContent`; งานที่ลากไม่ได้ (ไม่มีสิทธิ์/เผยแพร่แล้ว) ไม่มี handle; มือถือแสดงจุดสีและรายการของวันที่เลือก
 
-- [ ] **Step 1: เขียน test ที่ล้มเหลว**: `monthGrid(2026, 10)` เริ่ม `'2026-10-26'` จบ `'2026-12-06'`; `groupByDay` วางงาน `2026-11-13T17:30:00Z` (00:30 ของวันที่ 14 เวลาไทย) ใน `'2026-11-14'` (Review Focus 3)
-- [ ] **Step 2:** รัน → FAIL
-- [ ] **Step 3:** เขียนโค้ด
-- [ ] **Step 4:** รัน → PASS
-- [ ] **Step 5:** Commit `feat: drag-and-drop calendar`
+- [x] **Step 1: เขียน test ที่ล้มเหลว**: `monthGrid(2026, 10)` เริ่ม `'2026-10-26'` จบ `'2026-12-06'`; `groupByDay` วางงาน `2026-11-13T17:30:00Z` (00:30 ของวันที่ 14 เวลาไทย) ใน `'2026-11-14'` (Review Focus 3)
+- [x] **Step 2:** รัน → FAIL
+- [x] **Step 3:** เขียนโค้ด
+- [x] **Step 4:** รัน → PASS
+- [x] **Step 5:** Commit `feat: drag-and-drop calendar`
 
 ### Task 9: อนุมัติ เผยแพร่ worker และงานต้องโพสต์เอง
 
@@ -301,7 +301,7 @@ e2e/          happy-path.spec.ts
   - `confirmManualPost(db, actorId, contentChannelId, url)`: ต้องมีสิทธิ์ `manual` และ url ขึ้นต้น `https://` ไม่งั้น `{ ok:false, error:'invalid_url' }`
   - หน้าอนุมัติ: 3 แท็บ (รออนุมัติ / พร้อมเผยแพร่ / ต้องโพสต์เอง) การ์ดมีรูปใหญ่ + ตัวอย่างช่องทาง + ปุ่มตามสิทธิ์; แท็บต้องโพสต์เองมี คัดลอกแคปชัน (ของช่องทางนั้น), ดาวน์โหลดไฟล์, เปิดแพลตฟอร์ม, วางลิงก์, ปุ่ม "โพสต์แล้ว"
 
-- [ ] **Step 1: เขียน test ที่ล้มเหลว**
+- [x] **Step 1: เขียน test ที่ล้มเหลว**
   ```ts
   test('Ads work type → manual with ad reason even if channel connected')
   test('lemon8 → manual: no API')
@@ -311,10 +311,10 @@ e2e/          happy-path.spec.ts
   test('adapter failing 3 times → manual_todo with reason')              // ใช้ fake adapter
   test('confirmManualPost rejects non-https url')
   ```
-- [ ] **Step 2:** รัน → FAIL
-- [ ] **Step 3:** เขียนโค้ด (worker ใช้ pg-boss บนฐานข้อมูลเดียวกัน)
-- [ ] **Step 4:** รัน → PASS
-- [ ] **Step 5:** Commit `feat: approvals, publishing worker and manual posting queue`
+- [x] **Step 2:** รัน → FAIL
+- [x] **Step 3:** เขียนโค้ด (worker ใช้ pg-boss บนฐานข้อมูลเดียวกัน)
+- [x] **Step 4:** รัน → PASS
+- [x] **Step 5:** Commit `feat: approvals, publishing worker and manual posting queue`
 
 ### Task 10: คอมเมนต์ปักหมุดบนรูป และแจ้งเตือน
 
@@ -331,17 +331,17 @@ e2e/          happy-path.spec.ts
   - `notify(db, kind, contentId, actorId)`: เขียน `notifications` และส่งอีเมลผ่าน `sendEmail(to, subject, html)` ถ้า `notificationPrefs.email` และตั้ง SMTP ไว้ (ไม่ได้ตั้ง → ข้ามอย่างเงียบและ log)
   - worker job `due-soon` ทุกวัน 09:00 เวลาไทย: งาน `idea|draft|changes` ที่กำหนดลงภายใน 2 วัน
 
-- [ ] **Step 1: เขียน test ที่ล้มเหลว**
+- [x] **Step 1: เขียน test ที่ล้มเหลว**
   ```ts
   test('submit notifies managers and admins, not the submitter')
   test('recipients never include members of other projects')
   test('email pref off → in-app only')
   test('pin without mediaId → validation error')
   ```
-- [ ] **Step 2:** รัน → FAIL
-- [ ] **Step 3:** เขียนโค้ด; คลิกบนรูปในหน้ารายละเอียดเพื่อปักหมุด แสดงเลขหมุดบนรูปและในรายการคอมเมนต์
-- [ ] **Step 4:** รัน → PASS
-- [ ] **Step 5:** Commit `feat: pinned image comments and notifications`
+- [x] **Step 2:** รัน → FAIL
+- [x] **Step 3:** เขียนโค้ด; คลิกบนรูปในหน้ารายละเอียดเพื่อปักหมุด แสดงเลขหมุดบนรูปและในรายการคอมเมนต์
+- [x] **Step 4:** รัน → PASS
+- [x] **Step 5:** Commit `feat: pinned image comments and notifications`
 
 ### Task 11: รายงานผล และกรอกตัวเลขเอง
 
@@ -359,11 +359,11 @@ e2e/          happy-path.spec.ts
   - `toCsv(rows): string` (UTF-8 พร้อม BOM ให้ Excel อ่านภาษาไทยได้; escape `"`, `,`, ขึ้นบรรทัดใหม่)
   - หน้ารายงาน: ช่วง 7/30/90 วัน, ตัวเลขสรุป, กราฟรายวัน, แยกช่องทาง / ประเภทงาน / หมวด, heatmap ช่วงเวลา, ตารางรายคอนเทนต์พร้อมรูปย่อและป้ายที่มาข้อมูล, รายการ "ตัวเลขที่ยังขาด", ปุ่มดาวน์โหลด CSV
 
-- [ ] **Step 1: เขียน test ที่ล้มเหลว**: summarize ตัวอย่างที่คำนวณมือ; views 0 → er 0; `bestTimes` โพสต์ 2026-11-13T12:00Z ไปอยู่ ศ.(4) ชั่วโมง 19; `toCsv` ชื่อ `ลด 30%, "ทั้งร้าน"` ถูก escape และขึ้นต้นด้วย BOM; analyst กรอกได้, creator กรอกไม่ได้
-- [ ] **Step 2:** รัน → FAIL
-- [ ] **Step 3:** เขียนโค้ด (กราฟเขียนเป็น SVG เองตามแบบ prototype ไม่ใช้ไลบรารีกราฟ)
-- [ ] **Step 4:** รัน → PASS
-- [ ] **Step 5:** Commit `feat: reports, manual metrics and CSV export`
+- [x] **Step 1: เขียน test ที่ล้มเหลว**: summarize ตัวอย่างที่คำนวณมือ; views 0 → er 0; `bestTimes` โพสต์ 2026-11-13T12:00Z ไปอยู่ ศ.(4) ชั่วโมง 19; `toCsv` ชื่อ `ลด 30%, "ทั้งร้าน"` ถูก escape และขึ้นต้นด้วย BOM; analyst กรอกได้, creator กรอกไม่ได้
+- [x] **Step 2:** รัน → FAIL
+- [x] **Step 3:** เขียนโค้ด (กราฟเขียนเป็น SVG เองตามแบบ prototype ไม่ใช้ไลบรารีกราฟ)
+- [x] **Step 4:** รัน → PASS
+- [x] **Step 5:** Commit `feat: reports, manual metrics and CSV export`
 
 ### Task 12: หน้าช่องทางพร้อมตัวช่วยเชื่อมต่อ
 
@@ -378,11 +378,11 @@ e2e/          happy-path.spec.ts
   - การ์ดช่องทาง: สถานะ, ได้/บางส่วน/ไม่ได้ (โพสต์, ดึงสถิติ), ปุ่ม "เชื่อมต่อ" เปิด wizard; ระยะ 1 wizard แสดงขั้น "เตรียมก่อนเริ่ม" ครบ และขั้นล็อกอินแสดง "เร็วๆ นี้ · รอ {waitingFor}"; lemon8 แสดง "ไม่ต้องเชื่อมต่อ"
   - ข้อความในคู่มือเขียนสำหรับคนไม่เขียนโค้ด ตรวจกับเอกสารล่าสุดของแพลตฟอร์มตอนเขียน
 
-- [ ] **Step 1: เขียน test ที่ล้มเหลว**: ทุก platform มี guide; ทุก guide ที่ `coming_soon` มี `prepare.length >= 2`, `steps.length === 5`, `troubleshooting.length >= 2`, `waitingFor`; lemon8 เป็น `manual_only`
-- [ ] **Step 2:** รัน → FAIL
-- [ ] **Step 3:** เขียนเนื้อหาและหน้าเว็บ (ปุ่มเชื่อมต่อแสดงเฉพาะคนที่มีสิทธิ์ `channels`)
-- [ ] **Step 4:** รัน → PASS
-- [ ] **Step 5:** Commit `feat: channels page with connection guides`
+- [x] **Step 1: เขียน test ที่ล้มเหลว**: ทุก platform มี guide; ทุก guide ที่ `coming_soon` มี `prepare.length >= 2`, `steps.length === 5`, `troubleshooting.length >= 2`, `waitingFor`; lemon8 เป็น `manual_only`
+- [x] **Step 2:** รัน → FAIL
+- [x] **Step 3:** เขียนเนื้อหาและหน้าเว็บ (ปุ่มเชื่อมต่อแสดงเฉพาะคนที่มีสิทธิ์ `channels`)
+- [x] **Step 4:** รัน → PASS
+- [x] **Step 5:** Commit `feat: channels page with connection guides`
 
 ### Task 13: Docker, คู่มือขึ้นเซิร์ฟเวอร์ และทดสอบทั้งระบบ
 
@@ -393,9 +393,9 @@ e2e/          happy-path.spec.ts
 **Interfaces:**
 - Produces: `GET /api/health` → `200 {"ok":true,"db":true}`; คำสั่ง migrate ตอนเริ่ม container (`node dist/migrate.js` ก่อน `server.js`)
 
-- [ ] **Step 1: เขียน e2e** `e2e/happy-path.spec.ts` (Playwright ใช้ Chromium ที่ติดตั้งไว้ `executablePath: '/opt/pw-browsers/chromium'` เมื่อมี): สมัครคนแรก → สร้างโปรเจกต์ → สร้างคอนเทนต์พร้อมอัปโหลด `tests/fixtures/sample.jpg` → เห็นรูปย่อในคลังและปฏิทิน → ส่งอนุมัติ → อนุมัติ → เผยแพร่ → แท็บต้องโพสต์เองมีงาน → วางลิงก์ปิดงาน → กรอกตัวเลข → รายงานแสดงยอดวิวที่กรอก; สมัครคนที่สองแล้วเห็นหน้ารอแอดมิน
-- [ ] **Step 2:** รัน `npm run e2e` → FAIL จนกว่าทุกส่วนเชื่อมกัน; แก้จนผ่าน
-- [ ] **Step 3:** เขียน Dockerfile และ health route; `docker compose up` ถ้า Docker ใช้ได้ ไม่งั้นรัน `npm run build && npm start` + `npm run worker` แล้ว `curl localhost:3000/api/health` → `{"ok":true,"db":true}`
-- [ ] **Step 4:** เขียน `docs/deploy.md` ภาษาไทยทีละขั้นสำหรับ **Hostinger VPS** (เลือกแผน, ติดตั้ง Docker, `docker-compose.prod.yml` รัน web + worker + postgres + caddy สำหรับ HTTPS, ตั้งโดเมน, GitHub Actions `.github/workflows/deploy.yml` ssh เข้าไป `git pull && docker compose up -d --build` เมื่อ push เข้า `main`, สำรองฐานข้อมูลรายวันด้วย cron `pg_dump` เก็บ 7 วัน); ตาราง env ทั้งหมดจาก `.env.example`
-- [ ] **Step 5:** รัน `TZ=UTC npm test && npm run build && npm run e2e` → ผ่านทั้งหมด
-- [ ] **Step 6:** Commit `chore: docker, deploy guide and end-to-end test`
+- [x] **Step 1: เขียน e2e** `e2e/happy-path.spec.ts` (Playwright ใช้ Chromium ที่ติดตั้งไว้ `executablePath: '/opt/pw-browsers/chromium'` เมื่อมี): สมัครคนแรก → สร้างโปรเจกต์ → สร้างคอนเทนต์พร้อมอัปโหลด `tests/fixtures/sample.jpg` → เห็นรูปย่อในคลังและปฏิทิน → ส่งอนุมัติ → อนุมัติ → เผยแพร่ → แท็บต้องโพสต์เองมีงาน → วางลิงก์ปิดงาน → กรอกตัวเลข → รายงานแสดงยอดวิวที่กรอก; สมัครคนที่สองแล้วเห็นหน้ารอแอดมิน
+- [x] **Step 2:** รัน `npm run e2e` → FAIL จนกว่าทุกส่วนเชื่อมกัน; แก้จนผ่าน
+- [x] **Step 3:** เขียน Dockerfile และ health route; `docker compose up` ถ้า Docker ใช้ได้ ไม่งั้นรัน `npm run build && npm start` + `npm run worker` แล้ว `curl localhost:3000/api/health` → `{"ok":true,"db":true}`
+- [x] **Step 4:** เขียน `docs/deploy.md` ภาษาไทยทีละขั้นสำหรับ **Hostinger VPS** (เลือกแผน, ติดตั้ง Docker, `docker-compose.prod.yml` รัน web + worker + postgres + caddy สำหรับ HTTPS, ตั้งโดเมน, GitHub Actions `.github/workflows/deploy.yml` ssh เข้าไป `git pull && docker compose up -d --build` เมื่อ push เข้า `main`, สำรองฐานข้อมูลรายวันด้วย cron `pg_dump` เก็บ 7 วัน); ตาราง env ทั้งหมดจาก `.env.example`
+- [x] **Step 5:** รัน `TZ=UTC npm test && npm run build && npm run e2e` → ผ่านทั้งหมด
+- [x] **Step 6:** Commit `chore: docker, deploy guide and end-to-end test`

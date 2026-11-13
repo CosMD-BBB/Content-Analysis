@@ -1,0 +1,10 @@
+node_modules
+.next
+dist
+uploads
+.env
+.git
+prototype
+tests
+e2e
+*.md

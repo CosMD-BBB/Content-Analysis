@@ -43,3 +43,6 @@ next-env.d.ts
 .tmp/
 uploads/
 .env
+dist/
+test-results/
+playwright-report/

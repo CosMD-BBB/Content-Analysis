@@ -1,6 +1,6 @@
 import { Icon } from "@/components/icon";
 import { PageHead } from "@/components/page-head";
-import { AddMember, InviteLink, RemoveMember, RoleSelect } from "@/components/team-forms";
+import { AddMember, InviteLink, RemoveMember, ResetPassword, RoleSelect } from "@/components/team-forms";
 import { PERMS } from "@/src/access/permissions";
 import { getDb } from "@/src/db/client";
 import { ROLES } from "@/src/db/schema";
@@ -32,7 +32,7 @@ export default async function TeamPage({ params }: { params: Promise<{ projectId
                   <td><b>{m.name}</b>{m.userId === ctx.user.id && <span className="pill t-accent plain" style={{ marginLeft: 8 }}>คุณ</span>}</td>
                   <td className="muted">{m.email}</td>
                   <td>{admin ? <RoleSelect projectId={projectId} userId={m.userId} role={m.role} /> : <span className="pill t-neutral plain">{ROLE_LABEL[m.role]}</span>}</td>
-                  {admin && <td className="r">{m.userId !== ctx.user.id && <RemoveMember projectId={projectId} userId={m.userId} name={m.name} />}</td>}
+                  {admin && <td className="r"><span className="row" style={{ justifyContent: "flex-end", gap: 4, flexWrap: "nowrap" }}>{m.userId !== ctx.user.id && ctx.user.isSuperAdmin && <ResetPassword userId={m.userId} name={m.name} />}{m.userId !== ctx.user.id && <RemoveMember projectId={projectId} userId={m.userId} name={m.name} />}</span></td>}
                 </tr>
               ))}
             </tbody>
