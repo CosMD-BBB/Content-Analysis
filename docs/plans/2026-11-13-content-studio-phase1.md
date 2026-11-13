@@ -396,6 +396,6 @@ e2e/          happy-path.spec.ts
 - [ ] **Step 1: เขียน e2e** `e2e/happy-path.spec.ts` (Playwright ใช้ Chromium ที่ติดตั้งไว้ `executablePath: '/opt/pw-browsers/chromium'` เมื่อมี): สมัครคนแรก → สร้างโปรเจกต์ → สร้างคอนเทนต์พร้อมอัปโหลด `tests/fixtures/sample.jpg` → เห็นรูปย่อในคลังและปฏิทิน → ส่งอนุมัติ → อนุมัติ → เผยแพร่ → แท็บต้องโพสต์เองมีงาน → วางลิงก์ปิดงาน → กรอกตัวเลข → รายงานแสดงยอดวิวที่กรอก; สมัครคนที่สองแล้วเห็นหน้ารอแอดมิน
 - [ ] **Step 2:** รัน `npm run e2e` → FAIL จนกว่าทุกส่วนเชื่อมกัน; แก้จนผ่าน
 - [ ] **Step 3:** เขียน Dockerfile และ health route; `docker compose up` ถ้า Docker ใช้ได้ ไม่งั้นรัน `npm run build && npm start` + `npm run worker` แล้ว `curl localhost:3000/api/health` → `{"ok":true,"db":true}`
-- [ ] **Step 4:** เขียน `docs/deploy.md` ภาษาไทยทีละขั้นสำหรับ Railway (เชื่อม GitHub, เพิ่ม Postgres, ตั้งตัวแปร, service worker, ตั้งโดเมน, เปิด backup รายวัน) และ DigitalOcean (Droplet + Managed PostgreSQL + docker compose); ตาราง env ทั้งหมดจาก `.env.example`
+- [ ] **Step 4:** เขียน `docs/deploy.md` ภาษาไทยทีละขั้นสำหรับ **Hostinger VPS** (เลือกแผน, ติดตั้ง Docker, `docker-compose.prod.yml` รัน web + worker + postgres + caddy สำหรับ HTTPS, ตั้งโดเมน, GitHub Actions `.github/workflows/deploy.yml` ssh เข้าไป `git pull && docker compose up -d --build` เมื่อ push เข้า `main`, สำรองฐานข้อมูลรายวันด้วย cron `pg_dump` เก็บ 7 วัน); ตาราง env ทั้งหมดจาก `.env.example`
 - [ ] **Step 5:** รัน `TZ=UTC npm test && npm run build && npm run e2e` → ผ่านทั้งหมด
 - [ ] **Step 6:** Commit `chore: docker, deploy guide and end-to-end test`
