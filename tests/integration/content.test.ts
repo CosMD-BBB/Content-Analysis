@@ -99,3 +99,11 @@ test("favorites are per user and list filters work", async () => {
   expect(d.favorite).toBe(true);
   expect(d.channels.map((x) => x.platform)).toEqual(["tiktok"]);
 });
+
+test("date range filter", async () => {
+  const s = await setup();
+  await createContent(db, s.creator.id, s.project.id, s.input(s.creator.id, { title: "เก่า", date: "2030-01-01" }));
+  await createContent(db, s.creator.id, s.project.id, s.input(s.creator.id, { title: "ใหม่", date: "2030-02-01" }));
+  const rows = await listContents(db, s.manager.id, s.project.id, { from: new Date("2030-01-15T00:00:00Z"), to: new Date("2030-03-01T00:00:00Z") });
+  expect(rows.map((r) => r.title)).toEqual(["ใหม่"]);
+});

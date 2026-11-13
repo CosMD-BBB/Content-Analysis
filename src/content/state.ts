@@ -1,5 +1,5 @@
 import { can, canEditContent } from "../access/permissions";
-import type { ContentStatus, Role } from "../db/schema";
+import type { ContentStatus, Role } from "../db/constants";
 
 export type ContentAction = "start" | "submit" | "withdraw" | "approve" | "requestChanges" | "schedule" | "unschedule" | "publish";
 

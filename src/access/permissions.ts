@@ -1,4 +1,4 @@
-import type { ContentStatus, Role } from "../db/schema";
+import type { ContentStatus, Role } from "../db/constants";
 
 export type Perm = "create" | "editAny" | "assign" | "approve" | "publish" | "manual" | "metrics" | "reports" | "channels" | "team";
 

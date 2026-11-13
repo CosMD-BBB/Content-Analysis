@@ -1,4 +1,4 @@
-import { and, asc, desc, eq, inArray, sql } from "drizzle-orm";
+import { and, asc, desc, eq, gte, inArray, lt, sql } from "drizzle-orm";
 import { requireMember } from "../access/guard";
 import { can, canEditContent } from "../access/permissions";
 import type { DB } from "../db/client";
@@ -157,8 +157,8 @@ export async function listContents(db: DB, userId: string, projectId: string, f:
   if (f.status) conds.push(eq(contents.status, f.status));
   if (f.workTypeId) conds.push(eq(contents.workTypeId, f.workTypeId));
   if (f.ownerId) conds.push(eq(contents.ownerId, f.ownerId));
-  if (f.from) conds.push(sql`${contents.scheduledAt} >= ${f.from}`);
-  if (f.to) conds.push(sql`${contents.scheduledAt} < ${f.to}`);
+  if (f.from) conds.push(gte(contents.scheduledAt, f.from));
+  if (f.to) conds.push(lt(contents.scheduledAt, f.to));
   if (f.q) conds.push(sql`(${contents.title} ilike ${"%" + f.q + "%"} or ${contents.caption} ilike ${"%" + f.q + "%"})`);
   if (f.platform) conds.push(sql`exists (select 1 from ${contentChannels} cc where cc.content_id = ${contents.id} and cc.platform = ${f.platform})`);
   if (f.favoritesOf) conds.push(sql`exists (select 1 from ${favorites} fv where fv.content_id = ${contents.id} and fv.user_id = ${f.favoritesOf})`);

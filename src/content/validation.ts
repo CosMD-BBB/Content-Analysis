@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { FORMATS, PLATFORMS, type Platform } from "../db/schema";
+import { FORMATS, PLATFORMS, type Platform } from "../db/constants";
 
 export const contentInput = z.object({
   title: z.string().trim().min(1).max(200),
