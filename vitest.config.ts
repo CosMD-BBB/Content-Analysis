@@ -8,6 +8,6 @@ export default defineConfig({
     globalSetup: ["tests/global-setup.ts"],
     fileParallelism: false,
     testTimeout: 20000,
-    env: { TZ: "UTC" },
+    env: { TZ: "UTC", BCRYPT_COST: "4" },
   },
 });
