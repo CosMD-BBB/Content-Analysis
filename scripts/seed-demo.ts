@@ -49,6 +49,11 @@ function videoFrom(jpg: Buffer, w: number, h: number) {
   return readFileSync(out);
 }
 
+/** ไม่มี ffmpeg ในเครื่อง → ใช้รูปแทนวิดีโอ */
+function tryVideo(jpg: Buffer, w: number, h: number): Buffer | null {
+  try { return videoFrom(jpg, w, h); } catch { return null; }
+}
+
 const dims: Record<Format, [number, number]> = { reel: [720, 1280], video: [1280, 720], image: [1080, 1350], carousel: [1080, 1350], article: [1280, 720] };
 
 type Spec = {
@@ -118,8 +123,8 @@ async function main() {
       for (let i = 0; i < (s.images ?? 1); i++) {
         const shift = i ? ([s.colors[1], s.colors[0]] as [string, string]) : s.colors;
         const jpg = await art(s.art, shift[0], shift[1], w, h);
-        if ((s.format === "reel" || s.format === "video") && i === 0) {
-          const mp4 = videoFrom(jpg, w, h);
+        const mp4 = (s.format === "reel" || s.format === "video") && i === 0 ? tryVideo(jpg, w, h) : null;
+        if (mp4) {
           await addMedia(db, storage, ownerId, c.id, { body: mp4, mime: "video/mp4", size: mp4.length }, jpg);
         } else await addMedia(db, storage, ownerId, c.id, { body: jpg, mime: "image/jpeg", size: jpg.length });
       }

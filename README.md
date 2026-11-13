@@ -38,6 +38,10 @@
 ใช้ **Hostinger VPS** (เว็บ + worker + PostgreSQL + HTTPS ในเครื่องเดียวด้วย Docker) และอัปเดตอัตโนมัติจาก GitHub
 ทำตามขั้นตอนใน **[docs/deploy.md](docs/deploy.md)**
 
+## ลองบนเครื่อง Mac
+
+รันทั้งระบบบน Mac ด้วย Docker Desktop คำสั่งเดียว พร้อมข้อมูลตัวอย่าง ดู **[docs/run-on-mac.md](docs/run-on-mac.md)**
+
 ## รันในเครื่อง (สำหรับผู้พัฒนา)
 
 ต้องมี Node.js 22 และ PostgreSQL 16 (หรือ Docker)
