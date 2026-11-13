@@ -9,8 +9,14 @@ concurrency: deploy
 jobs:
   deploy:
     runs-on: ubuntu-latest
+    env:
+      VPS_HOST: ${{ secrets.VPS_HOST }}
     steps:
+      - name: Skip until the VPS is set up
+        if: env.VPS_HOST == ''
+        run: echo "ยังไม่ได้ตั้ง Secrets ของ VPS (ดู docs/deploy.md ขั้นที่ 9) จึงข้ามการ deploy"
       - name: Deploy over SSH
+        if: env.VPS_HOST != ''
         uses: appleboy/ssh-action@v1.2.0
         with:
           host: ${{ secrets.VPS_HOST }}
