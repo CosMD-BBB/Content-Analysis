@@ -6,7 +6,13 @@ const PUBLIC = ["/login", "/register", "/reset", "/invite", "/api/health"];
 export function proxy(req: NextRequest) {
   const { pathname, search } = req.nextUrl;
   if (PUBLIC.some((p) => pathname === p || pathname.startsWith(p + "/"))) return NextResponse.next();
-  if (req.cookies.get("cs_session")) return NextResponse.next();
+  if (req.cookies.get("cs_session")) {
+    const res = NextResponse.next();
+    // จำโปรเจกต์ล่าสุด เพื่อเปิดกลับมาที่เดิมหลังล็อกอิน
+    const m = pathname.match(/^\/p\/([0-9a-f-]{36})/);
+    if (m) res.cookies.set("cs_last_project", m[1], { path: "/", maxAge: 60 * 60 * 24 * 365, sameSite: "lax" });
+    return res;
+  }
   const url = req.nextUrl.clone();
   url.pathname = "/login";
   url.search = `?next=${encodeURIComponent(pathname + search)}`;

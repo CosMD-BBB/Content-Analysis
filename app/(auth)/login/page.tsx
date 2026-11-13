@@ -16,7 +16,7 @@ export default async function LoginPage({ searchParams }: { searchParams: Promis
     >
       <AuthForm
         action={loginAction}
-        hidden={{ next: sp.next ?? "/projects" }}
+        hidden={{ next: sp.next ?? "/" }}
         submit="เข้าสู่ระบบ"
         fields={[
           { name: "email", label: "อีเมล", type: "email", autoComplete: "email" },

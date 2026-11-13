@@ -12,7 +12,7 @@ export default async function RegisterPage({ searchParams }: { searchParams: Pro
     >
       <AuthForm
         action={registerAction}
-        hidden={{ next: sp.next ?? "/projects" }}
+        hidden={{ next: sp.next ?? "/" }}
         submit="สมัครใช้งาน"
         fields={[
           { name: "name", label: "ชื่อที่ให้ทีมเห็น", autoComplete: "name" },

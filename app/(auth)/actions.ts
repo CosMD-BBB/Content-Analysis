@@ -10,7 +10,7 @@ export type FormState = { error?: string; ok?: boolean; values?: Record<string, 
 const str = (f: FormData, k: string) => String(f.get(k) ?? "");
 
 function safeNext(next: string) {
-  return next.startsWith("/") && !next.startsWith("//") ? next : "/projects";
+  return next.startsWith("/") && !next.startsWith("//") ? next : "/";
 }
 
 export async function registerAction(_: FormState, f: FormData): Promise<FormState> {
