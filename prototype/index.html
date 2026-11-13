@@ -1,0 +1,1298 @@
+<!doctype html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<style>[hidden]{display:none!important}body{margin:0}</style>
+</head>
+<body>
+<title>Content Studio</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Anuphan:wght@500;600;700&family=IBM+Plex+Sans+Thai:wght@400;500;600&family=IBM+Plex+Mono:wght@500&display=swap">
+<style>
+/* Layout: floating sidebar panel + working canvas; drawer slides in from the right for content detail.
+   Color: cool ink neutrals biased toward the cobalt accent; status colors are semantic and separate. */
+:root {
+  --bg: #F3F4F9;
+  --surface: #FFFFFF;
+  --surface-2: #ECEEF5;
+  --line: #DADDE8;
+  --fg: #141829;
+  --muted: #5A6077;
+  --faint: #8A90A6;
+  --accent: #3E4FE0;
+  --accent-ink: #FFFFFF;
+  --accent-soft: #E4E7FD;
+  --ok: #0F7F55;   --ok-soft: #DCF2E8;
+  --warn: #A35F00; --warn-soft: #FBEBD3;
+  --bad: #C2313B;  --bad-soft: #FBE1E3;
+  --info: #2763C4; --info-soft: #E0EBFB;
+  --teal: #0B7E8C; --teal-soft: #DAF1F3;
+  --fav: #D99400;
+  --shadow: 0 1px 2px rgba(20,24,41,.05), 0 8px 24px rgba(20,24,41,.06);
+  --scrim: rgba(14,17,32,.42);
+  --f-display: "Anuphan", "IBM Plex Sans Thai", system-ui, sans-serif;
+  --f-body: "IBM Plex Sans Thai", "Noto Sans Thai", system-ui, sans-serif;
+  --f-mono: "IBM Plex Mono", ui-monospace, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #0D1020; --surface: #151A2D; --surface-2: #1D2238; --line: #2A3150;
+    --fg: #E7E9F4; --muted: #9BA1BA; --faint: #6E7491;
+    --accent: #8391FF; --accent-ink: #0D1020; --accent-soft: #232A57;
+    --ok: #45D19A; --ok-soft: #12322A; --warn: #F0B45A; --warn-soft: #382A12;
+    --bad: #FF7C84; --bad-soft: #3A1A20; --info: #79A8FF; --info-soft: #182A4A;
+    --teal: #4FD0DD; --teal-soft: #0F3036; --fav: #FFC53D;
+    --shadow: 0 1px 2px rgba(0,0,0,.3), 0 10px 30px rgba(0,0,0,.25);
+    --scrim: rgba(0,0,0,.55);
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #0D1020; --surface: #151A2D; --surface-2: #1D2238; --line: #2A3150;
+  --fg: #E7E9F4; --muted: #9BA1BA; --faint: #6E7491;
+  --accent: #8391FF; --accent-ink: #0D1020; --accent-soft: #232A57;
+  --ok: #45D19A; --ok-soft: #12322A; --warn: #F0B45A; --warn-soft: #382A12;
+  --bad: #FF7C84; --bad-soft: #3A1A20; --info: #79A8FF; --info-soft: #182A4A;
+  --teal: #4FD0DD; --teal-soft: #0F3036; --fav: #FFC53D;
+  --shadow: 0 1px 2px rgba(0,0,0,.3), 0 10px 30px rgba(0,0,0,.25);
+  --scrim: rgba(0,0,0,.55);
+  color-scheme: dark;
+}
+
+* { box-sizing: border-box; }
+body { background: var(--bg); color: var(--fg); font-family: var(--f-body); font-size: 14px; line-height: 1.55; }
+h1, h2, h3 { font-family: var(--f-display); margin: 0; text-wrap: balance; letter-spacing: -.01em; }
+h1 { font-size: clamp(24px, 3vw, 30px); font-weight: 700; line-height: 1.2; }
+h2 { font-size: 17px; font-weight: 600; }
+h3 { font-size: 15px; font-weight: 600; }
+p { margin: 0; }
+a { color: var(--accent); }
+button, input, select, textarea { font: inherit; color: inherit; }
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; border-radius: 6px; }
+.num { font-family: var(--f-mono); font-variant-numeric: tabular-nums; letter-spacing: -.02em; }
+.muted { color: var(--muted); }
+.faint { color: var(--faint); }
+.small { font-size: 12.5px; }
+.eyebrow { font-size: 11px; text-transform: uppercase; letter-spacing: .12em; color: var(--muted); font-weight: 600; }
+.ico { width: 18px; height: 18px; flex: none; fill: none; stroke: currentColor; stroke-width: 1.75; stroke-linecap: round; stroke-linejoin: round; }
+.ico.sm { width: 15px; height: 15px; }
+.ico.filled { fill: currentColor; }
+
+/* Shell */
+.shell { display: grid; grid-template-columns: 236px minmax(0, 1fr); gap: 20px; padding-block: 16px; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); min-height: 100vh; }
+.side { position: sticky; top: calc(16px + env(safe-area-inset-top, 0px)); height: calc(100vh - 32px - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px)); background: var(--surface); border: 1px solid var(--line); border-radius: 16px; display: flex; flex-direction: column; padding: 16px 12px; gap: 14px; overflow-y: auto; }
+.brand { display: flex; align-items: center; gap: 10px; padding: 2px 6px 6px; }
+.brand-mark { width: 34px; height: 34px; border-radius: 10px; background: var(--accent); color: var(--accent-ink); display: grid; place-items: center; font-family: var(--f-display); font-weight: 700; font-size: 17px; }
+.brand-name { font-family: var(--f-display); font-weight: 700; font-size: 17px; line-height: 1.1; }
+.brand-sub { font-size: 11px; color: var(--muted); letter-spacing: .08em; text-transform: uppercase; }
+.nav-group { display: flex; flex-direction: column; gap: 2px; }
+.nav-label { font-size: 10.5px; letter-spacing: .14em; text-transform: uppercase; color: var(--faint); font-weight: 600; padding: 8px 10px 4px; }
+.nav a { display: flex; align-items: center; gap: 10px; padding: 8px 10px; border-radius: 10px; color: var(--muted); text-decoration: none; font-weight: 500; }
+.nav a:hover { background: var(--surface-2); color: var(--fg); }
+.nav a[aria-current="page"] { background: var(--accent-soft); color: var(--accent); }
+.nav .count { margin-left: auto; font-size: 11.5px; font-family: var(--f-mono); background: var(--warn-soft); color: var(--warn); border-radius: 999px; padding: 0 7px; }
+.side-foot { margin-top: auto; display: flex; flex-direction: column; gap: 8px; }
+.demo-note { background: var(--surface-2); border-radius: 12px; padding: 10px 12px; font-size: 12px; color: var(--muted); }
+.main { min-width: 0; display: flex; flex-direction: column; gap: 20px; }
+.topbar { display: flex; align-items: center; gap: 10px; min-height: 48px; }
+.crumb { display: flex; align-items: center; gap: 8px; color: var(--muted); font-size: 13px; min-width: 0; }
+.crumb b { color: var(--fg); font-weight: 600; }
+.top-actions { margin-left: auto; display: flex; align-items: center; gap: 8px; }
+.me-chip { display: flex; align-items: center; gap: 10px; padding: 4px 6px 4px 4px; border-radius: 999px; border: 1px solid var(--line); background: var(--surface); cursor: pointer; }
+.me-chip .who { display: flex; flex-direction: column; line-height: 1.2; text-align: left; }
+.me-chip .who small { color: var(--muted); font-size: 11.5px; }
+.btn.menu-btn { display: none; }
+.page { display: flex; flex-direction: column; gap: 20px; padding-bottom: 40px; }
+.page-head { display: flex; flex-wrap: wrap; align-items: flex-end; gap: 16px; }
+.page-head > div:first-child { flex: 1 1 320px; min-width: 0; display: flex; flex-direction: column; gap: 6px; }
+.page-head .actions { display: flex; flex-wrap: wrap; gap: 8px; }
+
+/* Controls */
+.btn { display: inline-flex; align-items: center; justify-content: center; gap: 7px; border: 1px solid var(--line); background: var(--surface); color: var(--fg); border-radius: 10px; padding: 8px 14px; font-weight: 500; cursor: pointer; white-space: nowrap; text-decoration: none; }
+.btn:hover { border-color: var(--faint); }
+.btn.primary { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); }
+.btn.primary:hover { filter: brightness(1.07); }
+.btn.ok { background: var(--ok); border-color: var(--ok); color: var(--surface); }
+.btn.bad { color: var(--bad); border-color: color-mix(in srgb, var(--bad) 40%, var(--line)); }
+.btn.ghost { border-color: transparent; background: transparent; }
+.btn.ghost:hover { background: var(--surface-2); }
+.btn.sm { padding: 5px 10px; font-size: 12.5px; border-radius: 8px; }
+.btn.icon { padding: 8px; }
+.btn[disabled] { opacity: .45; cursor: not-allowed; }
+.input, .select, .textarea { width: 100%; border: 1px solid var(--line); background: var(--surface); border-radius: 10px; padding: 8px 12px; min-width: 0; }
+.select { padding-right: 28px; }
+.textarea { min-height: 110px; resize: vertical; line-height: 1.6; }
+.field { display: flex; flex-direction: column; gap: 6px; min-width: 0; }
+.field > label, .field > .lbl { font-size: 12.5px; font-weight: 600; color: var(--muted); }
+.field .hint { font-size: 12px; color: var(--faint); }
+.row { display: flex; gap: 12px; flex-wrap: wrap; align-items: center; }
+.grid2 { display: grid; grid-template-columns: repeat(2, minmax(0,1fr)); gap: 14px; }
+.filters { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.filters .select, .filters .input { width: auto; }
+.filters .input { flex: 1 1 220px; }
+.seg { display: inline-flex; background: var(--surface-2); border-radius: 10px; padding: 3px; gap: 2px; }
+.seg button { border: 0; background: transparent; padding: 5px 12px; border-radius: 8px; cursor: pointer; color: var(--muted); font-weight: 500; }
+.seg button[aria-pressed="true"] { background: var(--surface); color: var(--fg); box-shadow: var(--shadow); }
+.check { display: inline-flex; gap: 8px; align-items: center; cursor: pointer; user-select: none; }
+.check input { accent-color: var(--accent); width: 16px; height: 16px; }
+
+/* Surfaces */
+.card { background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 18px; min-width: 0; }
+.card-head { display: flex; align-items: center; gap: 10px; margin-bottom: 14px; flex-wrap: wrap; }
+.card-head .sp { margin-left: auto; }
+.cols { display: grid; grid-template-columns: minmax(0, 1.35fr) minmax(0, 1fr); gap: 20px; }
+.kpis { display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: 12px; }
+.tile { background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 14px 16px; display: flex; flex-direction: column; gap: 4px; text-decoration: none; color: inherit; }
+a.tile:hover { border-color: var(--accent); }
+.tile .k-val { font-family: var(--f-display); font-size: 30px; font-weight: 700; line-height: 1.1; font-variant-numeric: tabular-nums; }
+.tile .k-sub { font-size: 12.5px; color: var(--muted); }
+.tile.warn .k-val { color: var(--warn); }
+.tile.bad .k-val { color: var(--bad); }
+.up { color: var(--ok); } .down { color: var(--bad); }
+
+/* Pills & badges */
+.pill { display: inline-flex; align-items: center; gap: 5px; border-radius: 999px; padding: 1px 9px; font-size: 12px; font-weight: 500; white-space: nowrap; background: var(--surface-2); color: var(--muted); }
+.pill::before { content: ""; width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
+.pill.plain::before { display: none; }
+.t-neutral { background: var(--surface-2); color: var(--muted); }
+.t-info { background: var(--info-soft); color: var(--info); }
+.t-warn { background: var(--warn-soft); color: var(--warn); }
+.t-bad { background: var(--bad-soft); color: var(--bad); }
+.t-accent { background: var(--accent-soft); color: var(--accent); }
+.t-teal { background: var(--teal-soft); color: var(--teal); }
+.t-ok { background: var(--ok-soft); color: var(--ok); }
+.dot { width: 8px; height: 8px; border-radius: 50%; flex: none; display: inline-block; }
+.d-neutral { background: var(--faint); } .d-info { background: var(--info); } .d-warn { background: var(--warn); } .d-bad { background: var(--bad); } .d-accent { background: var(--accent); } .d-teal { background: var(--teal); } .d-ok { background: var(--ok); }
+.chb { display: inline-grid; place-items: center; width: 22px; height: 22px; border-radius: 6px; font-size: 10px; font-weight: 700; flex: none; letter-spacing: -.02em; box-shadow: inset 0 0 0 1px rgba(255,255,255,.12); }
+.chb.lg { width: 40px; height: 40px; border-radius: 11px; font-size: 15px; }
+.chs { display: inline-flex; gap: 3px; flex-wrap: wrap; }
+.av { display: inline-grid; place-items: center; width: 28px; height: 28px; border-radius: 50%; font-size: 12px; font-weight: 600; flex: none; color: #fff; }
+.av.lg { width: 44px; height: 44px; font-size: 16px; }
+.star { border: 0; background: transparent; cursor: pointer; color: var(--faint); padding: 4px; border-radius: 6px; display: inline-grid; place-items: center; }
+.star:hover { color: var(--fav); background: var(--surface-2); }
+.star.on { color: var(--fav); }
+.cap { display: inline-flex; align-items: center; gap: 4px; font-size: 12px; font-weight: 600; border-radius: 6px; padding: 1px 7px; white-space: nowrap; }
+.cap.yes { background: var(--ok-soft); color: var(--ok); }
+.cap.partial { background: var(--warn-soft); color: var(--warn); }
+.cap.no { background: var(--bad-soft); color: var(--bad); }
+
+/* Lists & tables */
+.list { display: flex; flex-direction: column; }
+.li { display: flex; gap: 12px; align-items: center; padding: 10px 6px; border-top: 1px solid var(--line); cursor: pointer; border-radius: 8px; min-width: 0; }
+.li:first-child { border-top: 0; }
+.li:hover { background: var(--surface-2); }
+.li .grow { flex: 1; min-width: 0; }
+.li .title { font-weight: 500; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.li .sub { font-size: 12.5px; color: var(--muted); }
+.task-ico { width: 32px; height: 32px; border-radius: 9px; display: grid; place-items: center; flex: none; }
+.scroll-x { overflow-x: auto; }
+.tbl { width: 100%; border-collapse: collapse; min-width: 720px; }
+.tbl th { text-align: left; font-size: 11.5px; letter-spacing: .06em; text-transform: uppercase; color: var(--faint); font-weight: 600; padding: 8px 10px; border-bottom: 1px solid var(--line); white-space: nowrap; }
+.tbl td { padding: 10px; border-bottom: 1px solid var(--line); vertical-align: middle; }
+.tbl tbody tr { cursor: pointer; }
+.tbl tbody tr:hover td { background: var(--surface-2); }
+.tbl td.r, .tbl th.r { text-align: right; }
+.tbl .t-title { font-weight: 500; }
+.empty { padding: 28px 12px; text-align: center; color: var(--muted); }
+
+/* Calendar */
+.cal-bar { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
+.cal-title { font-family: var(--f-display); font-size: 20px; font-weight: 600; min-width: 170px; }
+.cal { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); border: 1px solid var(--line); border-radius: 14px; overflow: hidden; background: var(--line); gap: 1px; }
+.cal .dow { background: var(--surface-2); padding: 6px 8px; font-size: 12px; color: var(--muted); font-weight: 600; }
+.cal .cell { background: var(--surface); min-height: 118px; padding: 6px; display: flex; flex-direction: column; gap: 4px; cursor: pointer; min-width: 0; position: relative; }
+.cal .cell.out { background: var(--bg); }
+.cal .cell.out .dn { color: var(--faint); }
+.cal .cell.sel { box-shadow: inset 0 0 0 2px var(--accent); }
+.cal .dn { font-size: 12.5px; font-weight: 600; font-family: var(--f-mono); display: flex; align-items: center; justify-content: space-between; }
+.cal .today .dn span { background: var(--accent); color: var(--accent-ink); border-radius: 999px; padding: 0 7px; }
+.cal .add { opacity: 0; border: 0; background: var(--surface-2); color: var(--muted); border-radius: 6px; width: 22px; height: 22px; display: grid; place-items: center; cursor: pointer; }
+.cal .cell:hover .add { opacity: 1; }
+.chip { display: flex; align-items: center; gap: 5px; font-size: 12px; padding: 2px 6px; border-radius: 6px; background: var(--surface-2); border-left: 3px solid var(--faint); cursor: pointer; min-width: 0; }
+.chip .tt { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; flex: 1; min-width: 0; }
+.chip .tm { font-family: var(--f-mono); color: var(--muted); font-size: 11px; }
+.chip.s-neutral { border-left-color: var(--faint); } .chip.s-info { border-left-color: var(--info); } .chip.s-warn { border-left-color: var(--warn); } .chip.s-bad { border-left-color: var(--bad); } .chip.s-accent { border-left-color: var(--accent); } .chip.s-teal { border-left-color: var(--teal); } .chip.s-ok { border-left-color: var(--ok); }
+.chip:hover { background: var(--accent-soft); }
+.more { font-size: 11.5px; color: var(--muted); padding-left: 4px; }
+.dots { display: none; gap: 3px; flex-wrap: wrap; }
+.legend { display: flex; flex-wrap: wrap; gap: 12px; font-size: 12px; color: var(--muted); }
+.legend span { display: inline-flex; align-items: center; gap: 6px; }
+
+/* Week strip */
+.week { display: grid; grid-template-columns: repeat(7, minmax(130px, 1fr)); gap: 8px; }
+.wday { background: var(--surface-2); border-radius: 12px; padding: 10px; display: flex; flex-direction: column; gap: 6px; min-height: 120px; }
+.wday.today { background: var(--accent-soft); }
+.wday .wd { font-size: 12px; color: var(--muted); font-weight: 600; }
+.wday .chip { background: var(--surface); }
+
+/* Approvals */
+.tabs { display: flex; gap: 4px; border-bottom: 1px solid var(--line); overflow-x: auto; }
+.tabs button { border: 0; background: transparent; padding: 10px 14px; cursor: pointer; color: var(--muted); font-weight: 600; border-bottom: 2px solid transparent; margin-bottom: -1px; white-space: nowrap; display: inline-flex; gap: 8px; align-items: center; }
+.tabs button[aria-selected="true"] { color: var(--fg); border-bottom-color: var(--accent); }
+.tabs .n { font-family: var(--f-mono); font-size: 11.5px; background: var(--surface-2); border-radius: 999px; padding: 0 7px; }
+.qcard { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 16px; align-items: start; }
+.qcard .cap-row { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; }
+.mode { display: inline-flex; align-items: center; gap: 6px; border: 1px solid var(--line); border-radius: 8px; padding: 3px 8px 3px 4px; font-size: 12px; }
+.caption-box { background: var(--surface-2); border-radius: 10px; padding: 10px 12px; white-space: pre-wrap; font-size: 13.5px; max-height: 190px; overflow: auto; }
+.q-actions { display: flex; flex-direction: column; gap: 8px; min-width: 170px; }
+.banner { display: flex; gap: 10px; align-items: flex-start; border-radius: 12px; padding: 12px 14px; background: var(--info-soft); color: var(--fg); }
+.banner .ico { color: var(--info); margin-top: 2px; }
+.banner.warn { background: var(--warn-soft); } .banner.warn .ico { color: var(--warn); }
+
+/* Channels */
+.ch-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 380px), 1fr)); gap: 16px; }
+.ch-card { display: flex; flex-direction: column; gap: 14px; }
+.ch-top { display: flex; gap: 12px; align-items: flex-start; }
+.ch-top .grow { flex: 1; min-width: 0; }
+.capline { display: grid; grid-template-columns: 112px minmax(0,1fr); gap: 4px 12px; align-items: start; padding: 10px 0; border-top: 1px solid var(--line); }
+.capline .k { font-size: 12.5px; color: var(--muted); font-weight: 600; padding-top: 1px; }
+.capline .v { display: flex; flex-direction: column; gap: 4px; font-size: 13px; }
+.req { font-size: 12.5px; color: var(--muted); background: var(--surface-2); border-radius: 10px; padding: 8px 10px; }
+.ch-foot { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; margin-top: auto; }
+.switch { position: relative; width: 36px; height: 20px; flex: none; }
+.switch input { opacity: 0; width: 100%; height: 100%; margin: 0; position: absolute; cursor: pointer; }
+.switch span { position: absolute; inset: 0; background: var(--line); border-radius: 999px; pointer-events: none; transition: background .15s; }
+.switch span::after { content: ""; position: absolute; width: 16px; height: 16px; left: 2px; top: 2px; border-radius: 50%; background: var(--surface); transition: transform .15s; }
+.switch input:checked + span { background: var(--accent); }
+.switch input:checked + span::after { transform: translateX(16px); }
+
+/* Reports */
+.chart-wrap { position: relative; }
+.chart { width: 100%; height: auto; display: block; }
+.chart .grid { stroke: var(--line); stroke-width: 1; }
+.chart .lbl { fill: var(--faint); font-size: 11px; font-family: var(--f-mono); }
+.chart .line { fill: none; stroke: var(--accent); stroke-width: 2.25; }
+.chart .area { fill: var(--accent); fill-opacity: .12; }
+.chart .end { fill: var(--accent); stroke: var(--surface); stroke-width: 2; }
+.chart .guide { stroke: var(--muted); stroke-dasharray: 3 3; }
+.tip { position: absolute; pointer-events: none; background: var(--fg); color: var(--bg); border-radius: 8px; padding: 6px 9px; font-size: 12px; white-space: nowrap; transform: translate(-50%, -110%); }
+.bars { display: flex; flex-direction: column; gap: 10px; }
+.bar-row { display: grid; grid-template-columns: 120px minmax(0, 1fr) 64px; gap: 10px; align-items: center; font-size: 13px; }
+.bar-row .nm { display: flex; gap: 8px; align-items: center; min-width: 0; }
+.bar-row .nm span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.bar-track { height: 10px; background: var(--surface-2); border-radius: 999px; overflow: hidden; }
+.bar-fill { height: 100%; background: var(--accent); border-radius: 999px; }
+.bar-fill.manual { background: repeating-linear-gradient(135deg, var(--warn) 0 6px, color-mix(in srgb, var(--warn) 60%, transparent) 6px 10px); }
+.src { font-size: 11px; font-weight: 600; border-radius: 5px; padding: 0 6px; }
+.src.api { background: var(--ok-soft); color: var(--ok); }
+.src.manual { background: var(--warn-soft); color: var(--warn); }
+.src.miss { background: var(--bad-soft); color: var(--bad); }
+
+/* Drawer & modal */
+.scrim { position: fixed; inset: 0; background: var(--scrim); z-index: 40; }
+.drawer { position: fixed; top: 0; right: 0; bottom: 0; width: min(560px, 100%); background: var(--surface); z-index: 41; display: flex; flex-direction: column; box-shadow: var(--shadow); border-left: 1px solid var(--line); padding-top: env(safe-area-inset-top, 0px); padding-right: env(safe-area-inset-right, 0px); padding-bottom: env(safe-area-inset-bottom, 0px); }
+.drawer.enter { animation: slideIn .22s ease-out; }
+@keyframes slideIn { from { transform: translateX(40px); opacity: .4; } to { transform: none; opacity: 1; } }
+.d-head { display: flex; align-items: center; gap: 8px; padding: 14px 18px; border-bottom: 1px solid var(--line); }
+.d-body { flex: 1; overflow-y: auto; padding: 18px; display: flex; flex-direction: column; gap: 20px; }
+.d-foot { border-top: 1px solid var(--line); padding: 12px 18px; display: flex; flex-wrap: wrap; gap: 8px; }
+.meta { display: grid; grid-template-columns: 110px minmax(0,1fr); gap: 8px 12px; font-size: 13.5px; }
+.meta dt { color: var(--muted); }
+.meta dd { margin: 0; display: flex; gap: 6px; align-items: center; flex-wrap: wrap; min-width: 0; }
+.steps { display: flex; gap: 0; }
+.step { flex: 1; display: flex; flex-direction: column; gap: 6px; font-size: 11.5px; color: var(--faint); min-width: 0; }
+.step .bar { height: 4px; border-radius: 2px; background: var(--surface-2); margin-right: 3px; }
+.step.done { color: var(--muted); } .step.done .bar { background: var(--accent); }
+.step.cur { color: var(--fg); font-weight: 600; } .step.cur .bar { background: var(--accent); }
+.step.alert { color: var(--bad); font-weight: 600; } .step.alert .bar { background: var(--bad); }
+.pub-row { display: grid; grid-template-columns: auto minmax(0,1fr); gap: 10px; padding: 10px 0; border-top: 1px solid var(--line); }
+.pub-row:first-child { border-top: 0; }
+.pub-row .what { display: flex; flex-direction: column; gap: 6px; min-width: 0; }
+.pub-row .line1 { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+.manual-box { display: flex; gap: 6px; flex-wrap: wrap; }
+.manual-box .input { flex: 1 1 200px; padding: 5px 10px; font-size: 13px; }
+.mtable { width: 100%; border-collapse: collapse; font-size: 13px; }
+.mtable th { text-align: right; font-weight: 600; color: var(--faint); font-size: 11px; padding: 6px; text-transform: uppercase; letter-spacing: .05em; }
+.mtable th:first-child, .mtable td:first-child { text-align: left; }
+.mtable td { padding: 7px 6px; border-top: 1px solid var(--line); text-align: right; font-family: var(--f-mono); font-variant-numeric: tabular-nums; }
+.mtable td:first-child { font-family: var(--f-body); }
+.comment { display: flex; gap: 10px; }
+.comment .bubble { background: var(--surface-2); border-radius: 4px 12px 12px 12px; padding: 8px 12px; flex: 1; min-width: 0; }
+.modal-wrap { position: fixed; inset: 0; z-index: 50; display: grid; place-items: center; padding: max(16px, env(safe-area-inset-top, 0px)) max(16px, env(safe-area-inset-right, 0px)) max(16px, env(safe-area-inset-bottom, 0px)) max(16px, env(safe-area-inset-left, 0px)); }
+.modal { position: relative; background: var(--surface); border: 1px solid var(--line); border-radius: 16px; width: min(640px, 100%); max-height: 100%; overflow-y: auto; box-shadow: var(--shadow); display: flex; flex-direction: column; }
+.modal.enter { animation: pop .18s ease-out; }
+@keyframes pop { from { transform: scale(.97); opacity: .5; } to { transform: none; opacity: 1; } }
+.m-head { padding: 16px 20px; border-bottom: 1px solid var(--line); display: flex; gap: 10px; align-items: center; }
+.m-body { padding: 18px 20px; display: flex; flex-direction: column; gap: 14px; }
+.m-foot { padding: 14px 20px; border-top: 1px solid var(--line); display: flex; justify-content: flex-end; gap: 8px; flex-wrap: wrap; }
+.ch-pick { display: grid; grid-template-columns: repeat(2, minmax(0,1fr)); gap: 8px; }
+.ch-opt { display: flex; gap: 10px; align-items: flex-start; border: 1px solid var(--line); border-radius: 10px; padding: 8px 10px; cursor: pointer; }
+.ch-opt:has(input:checked) { border-color: var(--accent); background: var(--accent-soft); }
+.ch-opt input { margin-top: 4px; accent-color: var(--accent); }
+.ch-opt .t { display: flex; flex-direction: column; gap: 2px; min-width: 0; font-size: 13px; }
+.prog-row { display: flex; gap: 10px; align-items: center; padding: 8px 0; border-top: 1px solid var(--line); }
+.prog-row:first-child { border-top: 0; }
+.prog-row .st { margin-left: auto; font-size: 12.5px; }
+.spin { width: 14px; height: 14px; border: 2px solid var(--line); border-top-color: var(--accent); border-radius: 50%; animation: rot .8s linear infinite; display: inline-block; vertical-align: -2px; }
+@keyframes rot { to { transform: rotate(360deg); } }
+.toasts { position: fixed; right: max(16px, env(safe-area-inset-right, 0px)); bottom: max(16px, env(safe-area-inset-bottom, 0px)); z-index: 60; display: flex; flex-direction: column; gap: 8px; max-width: calc(100% - 32px); }
+.toast { background: var(--fg); color: var(--bg); padding: 10px 14px; border-radius: 10px; box-shadow: var(--shadow); font-size: 13.5px; animation: pop .2s ease-out; max-width: 380px; }
+
+/* Login */
+.login { min-height: 100vh; display: grid; place-items: center; padding-block: 32px; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
+.login-box { width: min(880px, 100%); display: flex; flex-direction: column; gap: 22px; }
+.login-users { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 250px), 1fr)); gap: 12px; }
+.ucard { text-align: left; background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 16px; cursor: pointer; display: flex; flex-direction: column; gap: 10px; }
+.ucard:hover { border-color: var(--accent); box-shadow: var(--shadow); }
+.ucard ul { margin: 0; padding-left: 18px; color: var(--muted); font-size: 12.5px; display: flex; flex-direction: column; gap: 2px; }
+
+@media (max-width: 1100px) { .cols { grid-template-columns: minmax(0,1fr); } }
+@media (max-width: 900px) {
+  .shell { grid-template-columns: minmax(0,1fr); }
+  .side { position: fixed; top: 0; left: 0; bottom: 0; height: auto; width: min(290px, 86vw); z-index: 45; border-radius: 0 16px 16px 0; transform: translateX(-105%); transition: transform .2s ease; padding-top: calc(16px + env(safe-area-inset-top, 0px)); padding-left: calc(12px + env(safe-area-inset-left, 0px)); padding-bottom: calc(16px + env(safe-area-inset-bottom, 0px)); }
+  .side.open { transform: none; }
+  .btn.menu-btn { display: inline-flex; }
+  .me-chip .who { display: none; }
+  .qcard { grid-template-columns: minmax(0,1fr); }
+  .q-actions { flex-direction: row; flex-wrap: wrap; min-width: 0; }
+}
+@media (max-width: 720px) {
+  .cal .cell { min-height: 64px; padding: 4px; }
+  .cal .chip, .cal .more, .cal .add { display: none; }
+  .cal .dots { display: flex; }
+  .cal .dow { padding: 6px 4px; text-align: center; }
+  .grid2, .ch-pick { grid-template-columns: minmax(0,1fr); }
+  .bar-row { grid-template-columns: 92px minmax(0,1fr) 56px; }
+  .hide-sm { display: none; }
+  .capline { grid-template-columns: minmax(0,1fr); }
+  .li .chs { display: none; }
+}
+@media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation: none !important; transition: none !important; } }
+</style>
+
+<div id="app"></div>
+<div class="toasts" id="toasts" aria-live="polite"></div>
+
+<script>
+(() => {
+'use strict';
+
+/* ---------- helpers ---------- */
+const $ = (s, r = document) => r.querySelector(s);
+const $$ = (s, r = document) => [...r.querySelectorAll(s)];
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+const pad = n => String(n).padStart(2, '0');
+const toLocal = d => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+const parse = s => { const [a, b = '00:00'] = s.split('T'); const [y, m, d] = a.split('-').map(Number); const [h, mi] = b.split(':').map(Number); return new Date(y, m - 1, d, h, mi); };
+const dayKey = d => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+const startOfDay = d => new Date(d.getFullYear(), d.getMonth(), d.getDate());
+const addDays = (d, n) => new Date(d.getFullYear(), d.getMonth(), d.getDate() + n, d.getHours(), d.getMinutes());
+const daysBetween = (a, b) => Math.round((startOfDay(b) - startOfDay(a)) / 864e5);
+const TH_M = ['ม.ค.', 'ก.พ.', 'มี.ค.', 'เม.ย.', 'พ.ค.', 'มิ.ย.', 'ก.ค.', 'ส.ค.', 'ก.ย.', 'ต.ค.', 'พ.ย.', 'ธ.ค.'];
+const TH_MF = ['มกราคม', 'กุมภาพันธ์', 'มีนาคม', 'เมษายน', 'พฤษภาคม', 'มิถุนายน', 'กรกฎาคม', 'สิงหาคม', 'กันยายน', 'ตุลาคม', 'พฤศจิกายน', 'ธันวาคม'];
+const TH_D = ['อา.', 'จ.', 'อ.', 'พ.', 'พฤ.', 'ศ.', 'ส.'];
+const fmtD = s => { const d = typeof s === 'string' ? parse(s) : s; return `${d.getDate()} ${TH_M[d.getMonth()]}`; };
+const fmtDT = s => { const d = parse(s); return `${TH_D[d.getDay()]} ${d.getDate()} ${TH_M[d.getMonth()]} · ${pad(d.getHours())}:${pad(d.getMinutes())} น.`; };
+const fmtN = n => n == null ? '–' : n >= 1e6 ? (n / 1e6).toFixed(1) + 'M' : n >= 1e4 ? (n / 1e3).toFixed(1) + 'K' : Math.round(n).toLocaleString('en-US');
+const pct = x => (x * 100).toFixed(1) + '%';
+const ago = iso => { const m = Math.round((Date.now() - parse(iso)) / 6e4); if (m < 1) return 'เมื่อสักครู่'; if (m < 60) return `${m} นาทีที่แล้ว`; const h = Math.round(m / 60); if (h < 24) return `${h} ชม.ที่แล้ว`; return `${Math.round(h / 24)} วันที่แล้ว`; };
+const hash = s => { let h = 2166136261; for (const c of s) { h ^= c.charCodeAt(0); h = Math.imul(h, 16777619); } return h >>> 0; };
+const rngOf = seed => { let a = hash(seed); return () => { a |= 0; a = a + 0x6D2B79F5 | 0; let t = Math.imul(a ^ a >>> 15, 1 | a); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; }; };
+const uid = () => 'c' + Math.random().toString(36).slice(2, 8);
+
+const ICONS = {
+  home: '<path d="M3 10.5 12 3l9 7.5V20a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z"/>',
+  calendar: '<rect x="3" y="4.5" width="18" height="16.5" rx="2"/><path d="M3 9.5h18M8 2.5v4M16 2.5v4"/>',
+  layers: '<path d="m12 3 9 5-9 5-9-5z"/><path d="m3 13 9 5 9-5"/>',
+  approve: '<path d="m9 11 3 3 8-8"/><path d="M20 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/>',
+  chart: '<path d="M3 21h18"/><path d="M6 17v-6M11 17V6M16 17v-4M21 17V9"/>',
+  star: '<path d="m12 3 2.8 5.7 6.2.9-4.5 4.4 1.1 6.2L12 17.3l-5.6 2.9 1.1-6.2L3 9.6l6.2-.9z"/>',
+  link: '<path d="M10 14a4 4 0 0 0 5.7 0l3-3a4 4 0 0 0-5.7-5.7l-1 1"/><path d="M14 10a4 4 0 0 0-5.7 0l-3 3a4 4 0 0 0 5.7 5.7l1-1"/>',
+  users: '<circle cx="9" cy="8" r="3.5"/><path d="M2.5 20a6.5 6.5 0 0 1 13 0"/><path d="M16 4.6a3.5 3.5 0 0 1 0 6.8M21.5 20a6.5 6.5 0 0 0-4-6"/>',
+  plus: '<path d="M12 5v14M5 12h14"/>',
+  search: '<circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/>',
+  x: '<path d="M6 6l12 12M18 6 6 18"/>',
+  sun: '<circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/>',
+  moon: '<path d="M20 14.5A8 8 0 0 1 9.5 4a8 8 0 1 0 10.5 10.5z"/>',
+  refresh: '<path d="M20 11a8 8 0 0 0-14.6-4.5L4 8"/><path d="M4 3v5h5"/><path d="M4 13a8 8 0 0 0 14.6 4.5L20 16"/><path d="M20 21v-5h-5"/>',
+  copy: '<rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h8"/>',
+  ext: '<path d="M14 4h6v6M20 4l-9 9"/><path d="M19 14v5a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V6a1 1 0 0 1 1-1h5"/>',
+  pen: '<path d="M4 20h4L19 9l-4-4L4 16z"/><path d="m13.5 6.5 4 4"/>',
+  bolt: '<path d="M13 2 4 14h7l-1 8 9-12h-7z"/>',
+  menu: '<path d="M4 7h16M4 12h16M4 17h16"/>',
+  logout: '<path d="M15 4h4a1 1 0 0 1 1 1v14a1 1 0 0 1-1 1h-4"/><path d="m10 17 5-5-5-5M15 12H3"/>',
+  left: '<path d="m15 6-6 6 6 6"/>', right: '<path d="m9 6 6 6-6 6"/>',
+  send: '<path d="M21 3 3 10.5l7 3 3 7z"/><path d="m10 13.5 4-4"/>',
+  clock: '<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>',
+  info: '<circle cx="12" cy="12" r="9"/><path d="M12 11v5M12 8h.01"/>',
+  inbox: '<path d="M3 13h5l1.5 3h5L16 13h5"/><path d="M5 5h14l2 8v6a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1v-6z"/>',
+  hand: '<path d="M8 13V5.5a1.5 1.5 0 0 1 3 0V12M11 11.5V4a1.5 1.5 0 0 1 3 0v7.5M14 11.5V6a1.5 1.5 0 0 1 3 0v8a7 7 0 0 1-7 7 6 6 0 0 1-5-2.6l-2.4-3.6a1.5 1.5 0 0 1 2.5-1.7L8 15"/>',
+  check: '<path d="m5 12 5 5 9-10"/>',
+  undo: '<path d="M9 14 4 9l5-5"/><path d="M4 9h10a6 6 0 0 1 0 12h-3"/>',
+};
+const ic = (n, cls = '') => `<svg class="ico ${cls}" viewBox="0 0 24 24" aria-hidden="true">${ICONS[n] || ''}</svg>`;
+
+/* ---------- domain ---------- */
+const ROLES = {
+  admin:   { label: 'ผู้ดูแลระบบ', desc: 'ทำได้ทุกอย่าง รวมถึงเชื่อมต่อช่องทางและกำหนดสิทธิ์ทีม' },
+  manager: { label: 'หัวหน้าคอนเทนต์', desc: 'วางตาราง มอบหมายงาน อนุมัติ และกดเผยแพร่' },
+  creator: { label: 'ครีเอเตอร์', desc: 'สร้างและแก้คอนเทนต์ของตัวเอง แล้วส่งให้หัวหน้าอนุมัติ' },
+  analyst: { label: 'ฝ่ายวิเคราะห์', desc: 'ดูตารางและรายงานผล กรอกตัวเลขของช่องทางที่ไม่มี API' },
+};
+const PERMS = [
+  ['create',   'สร้างคอนเทนต์ใหม่',                 ['admin', 'manager', 'creator']],
+  ['editAny',  'แก้ไขคอนเทนต์ของทุกคน',             ['admin', 'manager']],
+  ['assign',   'มอบหมายงานให้คนอื่น',                ['admin', 'manager']],
+  ['approve',  'อนุมัติ / ขอแก้ไข',                  ['admin', 'manager']],
+  ['publish',  'กดเผยแพร่ / ตั้งเวลาโพสต์',           ['admin', 'manager']],
+  ['manual',   'ยืนยันงานที่ต้องโพสต์เอง',             ['admin', 'manager', 'creator']],
+  ['metrics',  'กรอกตัวเลขผลลัพธ์เอง',                ['admin', 'manager', 'analyst']],
+  ['reports',  'ดูรายงานผล',                          ['admin', 'manager', 'creator', 'analyst']],
+  ['channels', 'เชื่อมต่อ / ตัดการเชื่อมต่อช่องทาง',     ['admin']],
+  ['team',     'จัดการทีมและสิทธิ์',                   ['admin']],
+];
+const TYPES = { reel: 'คลิปสั้น', video: 'วิดีโอยาว', image: 'รูปเดี่ยว', carousel: 'อัลบั้ม/คารูเซล', article: 'บทความ' };
+const PILLARS = ['ความรู้เรื่องผิว', 'รีวิวสินค้า', 'โปรโมชัน', 'เบื้องหลัง', 'เสียงลูกค้า (UGC)'];
+const ST = {
+  idea:      { label: 'ไอเดีย', tone: 'neutral' },
+  draft:     { label: 'กำลังทำ', tone: 'info' },
+  review:    { label: 'รออนุมัติ', tone: 'warn' },
+  changes:   { label: 'ขอแก้ไข', tone: 'bad' },
+  approved:  { label: 'อนุมัติแล้ว', tone: 'accent' },
+  scheduled: { label: 'ตั้งเวลาแล้ว', tone: 'teal' },
+  published: { label: 'เผยแพร่แล้ว', tone: 'ok' },
+};
+const FIELDS = { views: 'ยอดวิว', likes: 'ไลก์', comments: 'คอมเมนต์', shares: 'แชร์', clicks: 'คลิก' };
+const CH = {
+  facebook:  { name: 'Facebook', s: 'f', bg: '#1877F2', fg: '#fff', post: 'yes', stats: 'yes', api: 'Meta Graph API (Pages)', types: ['reel', 'video', 'image', 'carousel', 'article'], fields: ['views', 'likes', 'comments', 'shares', 'clicks'],
+    postNote: 'โพสต์ข้อความ รูป วิดีโอ และ Reels ลงเพจได้ทันที หรือตั้งเวลาล่วงหน้า', statsNote: 'Reach, ยอดดูวิดีโอ, รีแอค, คอมเมนต์, แชร์, คลิกลิงก์ ผ่าน Page Insights',
+    req: 'ต้องเป็นแอดมินเพจ และแอปต้องผ่าน Meta App Review', scopes: ['pages_show_list', 'pages_manage_posts', 'pages_read_engagement', 'read_insights'], url: 'https://www.facebook.com/' },
+  instagram: { name: 'Instagram', s: 'IG', bg: '#D6246E', fg: '#fff', post: 'yes', stats: 'yes', api: 'Instagram Graph API (Content Publishing)', types: ['reel', 'video', 'image', 'carousel'], fields: ['views', 'likes', 'comments', 'shares'],
+    postNote: 'โพสต์รูป อัลบั้ม และ Reels ได้ (บทความยาวไม่รองรับ)', statsNote: 'Views, Reach, ไลก์, คอมเมนต์, แชร์, เซฟ ต่อโพสต์',
+    req: 'ต้องเป็นบัญชี Business/Creator ที่ผูกกับเพจ Facebook และมีโควตาจำนวนโพสต์ผ่าน API ต่อวัน', scopes: ['instagram_basic', 'instagram_content_publish', 'instagram_manage_insights'], url: 'https://www.instagram.com/' },
+  youtube:   { name: 'YouTube', s: 'YT', bg: '#E62117', fg: '#fff', post: 'yes', stats: 'yes', api: 'YouTube Data API v3 + Analytics API', types: ['video', 'reel'], fields: ['views', 'likes', 'comments', 'shares'],
+    postNote: 'อัปโหลดวิดีโอและ Shorts พร้อมตั้งเวลาเผยแพร่ (รองรับเฉพาะวิดีโอ)', statsNote: 'ยอดวิว เวลารับชม ไลก์ คอมเมนต์ แชร์ ผู้ติดตามที่เพิ่ม',
+    req: 'มีโควตา API รายวัน และแอปต้องผ่านการตรวจของ Google ไม่เช่นนั้นวิดีโอที่อัปจะถูกล็อกเป็น Private', scopes: ['youtube.upload', 'youtube.readonly', 'yt-analytics.readonly'], url: 'https://studio.youtube.com/' },
+  tiktok:    { name: 'TikTok', s: 'TT', bg: '#111111', fg: '#fff', post: 'partial', stats: 'partial', api: 'TikTok Content Posting API + Display API', types: ['reel', 'video', 'image', 'carousel'], fields: ['views', 'likes', 'comments', 'shares'],
+    postNote: 'แอปที่ผ่าน audit โพสต์ตรงได้ ถ้ายังไม่ผ่าน ระบบจะส่งคลิปเข้า Inbox ในแอป TikTok แล้วต้องกดโพสต์เองในแอป', statsNote: 'ได้ยอดวิว ไลก์ คอมเมนต์ แชร์ ต่อคลิป แต่ไม่มีเวลารับชมหรือแหล่งที่มาของผู้ชม',
+    req: 'สมัคร TikTok for Developers และยื่น audit เพื่อเปิด Direct Post', scopes: ['user.info.basic', 'video.upload', 'video.publish', 'video.list'], url: 'https://www.tiktok.com/' },
+  x:         { name: 'X', s: 'X', bg: '#000000', fg: '#fff', post: 'partial', stats: 'partial', api: 'X API v2', types: ['reel', 'video', 'image', 'carousel', 'article'], fields: ['views', 'likes', 'comments', 'shares', 'clicks'],
+    postNote: 'โพสต์ข้อความ รูป และวิดีโอได้ แต่ต้องใช้แพ็กเกจ API แบบเสียเงินจึงจะโพสต์และอ่านสถิติได้จริง', statsNote: 'Impressions, ไลก์, รีโพสต์, ตอบกลับ, คลิกลิงก์ (บางค่าดูย้อนหลังได้จำกัด)',
+    req: 'ต้องสมัครแพ็กเกจ X API ที่รองรับการโพสต์และอ่านสถิติ', scopes: ['tweet.read', 'tweet.write', 'users.read', 'offline.access'], url: 'https://x.com/' },
+  lemon8:    { name: 'Lemon8', s: 'L8', bg: '#F5DC3B', fg: '#1A1A1A', post: 'no', stats: 'no', api: 'ไม่มี API สาธารณะ', types: [], fields: ['views', 'likes', 'comments', 'shares'],
+    postNote: 'ต้องโพสต์เองในแอป Lemon8 ระบบจะสร้างงาน "ต้องโพสต์เอง" พร้อมแคปชันให้คัดลอก', statsNote: 'ต้องกรอกตัวเลขเองหลังโพสต์ (ยอดวิว ไลก์ คอมเมนต์ แชร์)',
+    req: 'ไม่ต้องเชื่อมต่อ ทีมบันทึกลิงก์โพสต์และตัวเลขเอง', scopes: [], url: 'https://www.lemon8-app.com/' },
+  line:      { name: 'LINE OA', s: 'LN', bg: '#06C755', fg: '#fff', post: 'yes', stats: 'partial', api: 'LINE Messaging API', types: ['reel', 'video', 'image', 'carousel', 'article'], fields: ['views', 'clicks'],
+    postNote: 'บรอดแคสต์ข้อความ รูป และการ์ดลิงก์ถึงผู้ติดตามได้', statsNote: 'ยอดส่ง ยอดเปิดอ่าน และคลิก ต่อข้อความ (สถิติแบบรวม)',
+    req: 'จำนวนข้อความที่ส่งได้ต่อเดือนขึ้นกับแพ็กเกจ LINE OA', scopes: ['Channel access token'], url: 'https://manager.line.biz/' },
+  web:       { name: 'เว็บไซต์', s: 'W', bg: '#4B5571', fg: '#fff', post: 'yes', stats: 'yes', api: 'WordPress REST API + GA4 Data API', types: ['reel', 'video', 'image', 'carousel', 'article'], fields: ['views', 'comments', 'clicks'],
+    postNote: 'สร้างบทความบนเว็บไซต์ พร้อมตั้งเวลาเผยแพร่', statsNote: 'Pageviews, ผู้ใช้, เวลาบนหน้า, คลิกปุ่ม จาก Google Analytics 4',
+    req: 'ใช้ Application Password ของ WordPress และสิทธิ์อ่าน GA4 property', scopes: ['WordPress Application Password', 'GA4 Viewer'], url: 'https://wordpress.com/' },
+};
+const CH_ORDER = ['facebook', 'instagram', 'youtube', 'tiktok', 'x', 'lemon8', 'line', 'web'];
+const chb = (id, lg = false) => { const c = CH[id]; return `<span class="chb${lg ? ' lg' : ''}" style="background:${c.bg};color:${c.fg}" title="${esc(c.name)}">${c.s}</span>`; };
+const chbs = ids => `<span class="chs">${ids.map(id => chb(id)).join('')}</span>`;
+const capLabel = v => v === 'yes' ? 'ได้' : v === 'partial' ? 'บางส่วน' : 'ไม่ได้';
+
+/* How a post to channel `ch` will actually go out, given current connections */
+function publishMode(ch, type) {
+  const c = CH[ch], st = S.channels[ch];
+  if (c.post === 'no') return { mode: 'manual', reason: 'แพลตฟอร์มไม่มี API สำหรับโพสต์' };
+  if (!st.connected) return { mode: 'manual', reason: 'ยังไม่ได้เชื่อมต่อบัญชี' };
+  if (!c.types.includes(type)) return { mode: 'manual', reason: `API ไม่รองรับ${TYPES[type]}` };
+  if (ch === 'tiktok' && !st.audited) return { mode: 'draft', reason: 'ส่งเข้า Inbox ในแอป TikTok ต้องกดโพสต์เอง' };
+  return { mode: 'auto', reason: 'โพสต์อัตโนมัติผ่าน API' };
+}
+const MODE_UI = {
+  auto:   { label: 'โพสต์อัตโนมัติ', icon: 'bolt', tone: 'ok' },
+  draft:  { label: 'ส่งเป็นแบบร่าง', icon: 'inbox', tone: 'warn' },
+  manual: { label: 'ต้องโพสต์เอง', icon: 'hand', tone: 'bad' },
+};
+const modeChip = (ch, type) => { const m = publishMode(ch, type), u = MODE_UI[m.mode]; return `<span class="mode" title="${esc(m.reason)}">${chb(ch)}<span style="color:var(--${u.tone})">${ic(u.icon, 'sm')}</span>${u.label}</span>`; };
+const statsOk = ch => CH[ch].stats !== 'no' && S.channels[ch].connected;
+
+/* ---------- seed data ---------- */
+const NOW = () => new Date();
+function genMetrics(c, ch, rnd, age) {
+  const base = { tiktok: 21000, instagram: 9200, facebook: 7400, youtube: 6100, web: 2300, x: 1900, line: 5200, lemon8: 2700 }[ch];
+  const tf = { reel: 1.3, video: 1, image: .7, carousel: .9, article: .6 }[c.type];
+  const grow = Math.min(1, .35 + age / 10);
+  const views = Math.round(base * tf * (.45 + rnd() * 1.3) * grow);
+  const likes = Math.round(views * (.025 + rnd() * .06));
+  const m = { views, likes, comments: Math.round(likes * (.05 + rnd() * .09)), shares: Math.round(likes * (.06 + rnd() * .16)), clicks: Math.round(views * (.008 + rnd() * .025)) };
+  for (const k of Object.keys(FIELDS)) if (!CH[ch].fields.includes(k)) m[k] = null;
+  return m;
+}
+function seed() {
+  const now = NOW();
+  const users = [
+    { id: 'u1', name: 'กานต์ ศรีสุข', nick: 'กานต์', title: 'Digital Lead', role: 'admin', color: '#3E4FE0' },
+    { id: 'u2', name: 'พิมพ์ชนก วงศ์ดี', nick: 'พิม', title: 'Content Manager', role: 'manager', color: '#0B7E8C' },
+    { id: 'u3', name: 'ต้นกล้า มีสุข', nick: 'ต้น', title: 'Video Creator', role: 'creator', color: '#C2313B' },
+    { id: 'u4', name: 'มายด์ ธนพร', nick: 'มายด์', title: 'Graphic & Copywriter', role: 'creator', color: '#A35F00' },
+    { id: 'u5', name: 'บอส ปกรณ์', nick: 'บอส', title: 'Marketing Analyst', role: 'analyst', color: '#6B4FC8' },
+  ];
+  const channels = {
+    facebook: { connected: true, account: 'เพจแบรนด์ (ตัวอย่าง)' }, instagram: { connected: true, account: '@brand.official' },
+    youtube: { connected: true, account: 'Brand Channel' }, tiktok: { connected: true, account: '@brand.th', audited: false },
+    x: { connected: false, account: '' }, lemon8: { connected: false, account: '' },
+    line: { connected: true, account: 'LINE OA @brand' }, web: { connected: true, account: 'brand.co.th/blog' },
+  };
+  const S0 = { v: 1, uid: null, users, channels, content: [], log: [], lastSync: toLocal(addDays(now, 0)) };
+  S = S0; // publishMode/statsOk read the channel state while seeding
+  const at = (off, t) => { const d = addDays(startOfDay(now), off); const [h, m] = t.split(':').map(Number); d.setHours(h, m); return toLocal(d); };
+  const caps = {
+    reel: 'ฮุก 3 วิแรก + สาธิตจริง ปิดท้ายด้วย CTA ให้คอมเมนต์ปัญหาผิว',
+    video: 'วิดีโอยาวอธิบายละเอียด มีบทพูดและซับไตเติล',
+    image: 'ภาพเดี่ยวพร้อมพาดหัวสั้น อ่านจบใน 3 วินาที',
+    carousel: 'อัลบั้ม 6–8 ภาพ เล่าเป็นขั้นตอน',
+    article: 'บทความ SEO ความยาว 900–1,200 คำ',
+  };
+  const rows = [
+    // off, time, title, type, channels, owner, status, pillar
+    [-52, '19:00', 'ผิวมันหรือผิวขาดน้ำ? เช็กง่ายๆ ใน 1 นาที', 'reel', ['tiktok', 'instagram', 'facebook'], 'u3', 'published', 0],
+    [-46, '12:00', 'คู่มือเลือกกันแดดตามสภาพผิว', 'article', ['web', 'facebook', 'line'], 'u4', 'published', 0],
+    [-41, '18:30', 'รีวิวคลีนซิ่งออยล์ ล้างเมคอัพกันน้ำ', 'video', ['youtube', 'facebook'], 'u3', 'published', 1],
+    [-37, '11:00', 'โปรฯ วันเงินเดือนออก ลด 20%', 'image', ['facebook', 'instagram', 'line', 'x'], 'u4', 'published', 2],
+    [-33, '20:00', 'เบื้องหลังแพ็กของส่งลูกค้า', 'reel', ['tiktok', 'instagram'], 'u3', 'published', 3],
+    [-29, '19:30', 'ลูกค้าเล่า: ผิวแพ้ง่ายใช้แล้วไม่แสบ', 'carousel', ['instagram', 'facebook', 'lemon8'], 'u4', 'published', 4],
+    [-26, '19:00', '5 สัญญาณว่าผิวคุณกำลังขาดน้ำ', 'reel', ['facebook', 'instagram', 'tiktok', 'youtube'], 'u3', 'published', 0],
+    [-22, '18:00', 'รีวิวเซรั่มวิตามินซี ใช้จริง 30 วัน', 'video', ['youtube', 'facebook', 'web'], 'u3', 'published', 1],
+    [-19, '12:00', 'ลำดับการทาสกินแคร์ เช้า–เย็น', 'carousel', ['instagram', 'facebook', 'lemon8'], 'u4', 'published', 0],
+    [-16, '20:00', 'Q&A: ทากันแดดซ้ำยังไงไม่ให้หน้าเยิ้ม', 'reel', ['tiktok', 'instagram', 'facebook'], 'u3', 'published', 0],
+    [-14, '10:00', 'ไนอะซินาไมด์ใช้คู่กับอะไรได้บ้าง', 'article', ['web', 'facebook', 'line', 'x'], 'u4', 'published', 0],
+    [-11, '19:00', 'เบื้องหลังถ่ายแคมเปญปลายปี', 'reel', ['instagram', 'tiktok'], 'u3', 'published', 3],
+    [-9, '11:11', 'โปรฯ 11.11 ลด 30% ทั้งร้าน', 'image', ['facebook', 'instagram', 'line', 'x', 'lemon8'], 'u4', 'published', 2],
+    [-6, '19:00', 'ผิวแพ้ง่ายเลือกโทนเนอร์ยังไง', 'video', ['youtube', 'tiktok', 'facebook'], 'u3', 'published', 0],
+    [-4, '12:30', 'รีวิวจากลูกค้าจริง: สิวผดหายใน 2 สัปดาห์', 'carousel', ['instagram', 'facebook', 'lemon8'], 'u4', 'published', 4],
+    [-2, '20:00', 'Myth vs Fact: อยู่ในร่มต้องทากันแดดไหม', 'reel', ['tiktok', 'instagram', 'youtube', 'x'], 'u3', 'published', 0],
+    [-1, '20:00', 'ไลฟ์ถามตอบกับเภสัชกร', 'video', ['facebook', 'youtube'], 'u2', 'published', 0],
+    [0, 'NEXT', 'ทริกล้างหน้าให้สะอาดใน 60 วินาที', 'reel', ['tiktok', 'instagram', 'facebook'], 'u3', 'scheduled', 0],
+    [1, '12:00', 'วิธีอ่านฉลากสกินแคร์ให้เป็น', 'carousel', ['instagram', 'facebook', 'lemon8'], 'u4', 'review', 0],
+    [2, '19:00', 'รีวิวมอยส์เจอไรเซอร์สูตรใหม่', 'video', ['youtube', 'facebook', 'tiktok'], 'u3', 'review', 1],
+    [3, '10:00', 'นับถอยหลัง 12.12 เปิดตัวเซ็ตของขวัญ', 'image', ['facebook', 'instagram', 'line', 'x'], 'u4', 'approved', 2],
+    [4, '19:30', 'สกินแคร์สำหรับผู้ชาย 3 ขั้นตอน', 'reel', ['tiktok', 'instagram', 'youtube'], 'u3', 'changes', 0],
+    [6, '10:00', 'กรดผลัดผิว AHA กับ BHA ต่างกันยังไง', 'article', ['web', 'facebook', 'x'], 'u4', 'draft', 0],
+    [7, '19:00', 'หน้าหนาวผิวลอกเป็นขุย แก้ยังไง', 'reel', ['tiktok', 'instagram', 'facebook', 'youtube'], 'u3', 'draft', 0],
+    [9, '12:00', 'ชวนแชร์รูทีนผิวฉ่ำ ลุ้นรับเซ็ตของขวัญ', 'image', ['instagram', 'facebook', 'lemon8', 'tiktok'], 'u4', 'idea', 4],
+    [11, '20:00', 'แกะกล่องเซ็ตของขวัญปลายปี', 'video', ['youtube', 'tiktok', 'instagram'], 'u3', 'idea', 1],
+    [12, '09:00', 'โปรฯ 12.12 วันจริง', 'image', ['facebook', 'instagram', 'line', 'x', 'lemon8'], 'u4', 'idea', 2],
+    [15, '19:00', 'เบื้องหลังห้องแล็บ: กว่าจะเป็นเซรั่ม 1 ขวด', 'video', ['youtube', 'facebook'], 'u2', 'idea', 3],
+  ];
+  rows.forEach((r, i) => {
+    const [off, t, title, type, chs, owner, status, pillar] = r;
+    let date = t === 'NEXT' ? (() => { const d = new Date(now.getTime() + 3 * 36e5); d.setMinutes(0); return toLocal(d); })() : at(off, t);
+    const c = { id: 'c' + (i + 1), title, type, channels: chs, owner, status, pillar: PILLARS[pillar], date,
+      caption: `${title}\n\n${caps[type]}\n\n#สกินแคร์ #ดูแลผิว`, asset: 'https://drive.google.com/ (โฟลเดอร์งาน)', fav: [], comments: [], results: {}, metrics: {} };
+    if (status === 'published') {
+      const rnd = rngOf(c.id);
+      const age = Math.max(1, daysBetween(parse(date), now));
+      for (const ch of chs) {
+        const m = publishMode(ch, type);
+        // older posts on X were posted by hand before the account was disconnected
+        if (m.mode === 'auto') c.results[ch] = { state: 'posted', url: CH[ch].url, at: date };
+        else c.results[ch] = { state: 'manual-done', url: CH[ch].url, at: date, by: owner };
+        const mm = genMetrics(c, ch, rnd, age);
+        if (ch === 'lemon8' && off > -6) continue;          // not filled in yet
+        if (ch === 'x' && off > -3) { c.results[ch] = { state: 'manual-todo', reason: 'ยังไม่ได้เชื่อมต่อบัญชี' }; continue; }
+        c.metrics[ch] = { ...mm, src: statsOk(ch) ? 'api' : 'manual', at: toLocal(addDays(now, 0)) };
+      }
+    }
+    S0.content.push(c);
+  });
+  const C = id => S0.content.find(c => c.id === id);
+  C('c8').fav = ['u2', 'u5']; C('c10').fav = ['u2']; C('c7').fav = ['u3', 'u2']; C('c16').fav = ['u3']; C('c13').fav = ['u1', 'u5']; C('c21').fav = ['u2'];
+  C('c22').comments = [
+    { uid: 'u3', text: 'ส่งให้ตรวจครับ ไฟล์อยู่ในโฟลเดอร์ week 46', at: toLocal(addDays(now, -2)) },
+    { uid: 'u2', text: 'ช่วงเปิดยาวไป ตัดให้เข้าเรื่องภายใน 3 วินาทีแรก และเปลี่ยนเพลงเป็นเพลงที่ใช้เชิงพาณิชย์ได้นะ', at: toLocal(addDays(now, -1)) },
+  ];
+  C('c19').comments = [{ uid: 'u4', text: 'ส่งให้ตรวจค่ะ ภาพปกมี 2 แบบในโฟลเดอร์ เลือกได้เลย', at: toLocal(addDays(now, 0)) }];
+  C('c20').comments = [{ uid: 'u3', text: 'ตัดต่อเสร็จแล้วครับ ซับไทยครบ', at: toLocal(addDays(now, 0)) }];
+  S0.log = [
+    { at: toLocal(addDays(now, 0)), uid: 'u4', text: 'ส่งคอนเทนต์ให้อนุมัติ', cid: 'c19' },
+    { at: toLocal(addDays(now, 0)), uid: 'u3', text: 'ส่งคอนเทนต์ให้อนุมัติ', cid: 'c20' },
+    { at: toLocal(addDays(now, -1)), uid: 'u2', text: 'ขอแก้ไข', cid: 'c22' },
+    { at: toLocal(addDays(now, -1)), uid: 'u2', text: 'อนุมัติ', cid: 'c21' },
+    { at: toLocal(addDays(now, -1)), uid: 'u2', text: 'เผยแพร่', cid: 'c17' },
+    { at: toLocal(addDays(now, -2)), uid: 'u2', text: 'เผยแพร่', cid: 'c16' },
+  ];
+  return S0;
+}
+
+/* ---------- state ---------- */
+const KEY = 'content-studio-demo-v1';
+let S;
+try { const raw = localStorage.getItem(KEY); const s = raw && JSON.parse(raw); S = s && s.v === 1 ? s : null; } catch (e) { S = null; }
+if (!S) S = seed();
+function save() { try { localStorage.setItem(KEY, JSON.stringify(S)); } catch (e) { /* storage unavailable: demo still works in memory */ } }
+const UI = { drawer: null, modal: null, anim: false, menu: false, cal: null, calDay: null, calCh: 'all', calSt: 'all', calMine: false,
+  libQ: '', libSt: 'all', libCh: 'all', libOwner: 'all', range: 30, sort: 'views', apTab: 'review' };
+const me = () => S.users.find(u => u.id === S.uid);
+const user = id => S.users.find(u => u.id === id) || { nick: '?', name: '?', color: '#888' };
+const getC = id => S.content.find(c => c.id === id);
+const can = p => { const u = me(); const d = PERMS.find(x => x[0] === p); return !!(u && d && d[2].includes(u.role)); };
+const canEdit = c => c.status !== 'published' && (can('editAny') || (can('create') && c.owner === S.uid && ['idea', 'draft', 'changes'].includes(c.status)));
+const isFav = c => c.fav.includes(S.uid);
+const av = (id, lg) => { const u = user(id); return `<span class="av${lg ? ' lg' : ''}" style="background:${u.color}" title="${esc(u.name)}">${esc(u.nick.slice(0, 1))}</span>`; };
+const statusPill = s => `<span class="pill t-${ST[s].tone}">${ST[s].label}</span>`;
+const log = (text, cid) => { S.log.unshift({ at: toLocal(NOW()), uid: S.uid, text, cid }); S.log = S.log.slice(0, 60); };
+const totals = c => { let v = 0, e = 0; for (const m of Object.values(c.metrics)) { v += m.views || 0; e += (m.likes || 0) + (m.comments || 0) + (m.shares || 0); } return { views: v, eng: e, er: v ? e / v : 0 }; };
+const manualQueue = () => { const out = []; for (const c of S.content) if (c.status === 'published') for (const [ch, r] of Object.entries(c.results)) if (r.state === 'manual-todo' || r.state === 'draft-sent') out.push({ c, ch, r }); return out; };
+const missingMetrics = () => { const out = []; for (const c of S.content) if (c.status === 'published') for (const [ch, r] of Object.entries(c.results)) if ((r.state === 'manual-done' || r.state === 'posted') && !c.metrics[ch] && !statsOk(ch)) out.push({ c, ch }); return out; };
+function toast(msg) { const t = document.createElement('div'); t.className = 'toast'; t.textContent = msg; $('#toasts').appendChild(t); setTimeout(() => t.remove(), 3600); }
+
+/* ---------- routing ---------- */
+const VIEWS = {
+  overview:  { label: 'ภาพรวม', icon: 'home', render: viewOverview },
+  calendar:  { label: 'ปฏิทินคอนเทนต์', icon: 'calendar', render: viewCalendar },
+  library:   { label: 'คลังคอนเทนต์', icon: 'layers', render: viewLibrary },
+  approvals: { label: 'อนุมัติ & เผยแพร่', icon: 'approve', render: viewApprovals },
+  reports:   { label: 'รายงานผล', icon: 'chart', render: viewReports },
+  favorites: { label: 'รายการโปรด', icon: 'star', render: viewFavorites },
+  channels:  { label: 'ช่องทางที่เชื่อมต่อ', icon: 'link', render: viewChannels },
+  team:      { label: 'ทีมและสิทธิ์', icon: 'users', render: viewTeam },
+};
+const currentView = () => { const h = location.hash.slice(1); return VIEWS[h] ? h : 'overview'; };
+
+/* ---------- render ---------- */
+function render() {
+  const app = $('#app');
+  const db = $('.d-body'); const keep = db ? db.scrollTop : 0;
+  if (!me()) { app.innerHTML = viewLogin(); return; }
+  const v = currentView();
+  app.innerHTML = `<div class="shell">${sidebar(v)}<main class="main">${topbar(v)}<div class="page">${VIEWS[v].render()}</div></main></div>
+    ${UI.menu ? '<div class="scrim" data-act="menu" style="z-index:44"></div>' : ''}${drawerHTML()}${modalHTML()}`;
+  const nb = $('.d-body'); if (nb && !UI.anim) nb.scrollTop = keep;
+  UI.anim = false;
+  bindChart();
+}
+
+function sidebar(v) {
+  const pend = S.content.filter(c => c.status === 'review').length;
+  const man = manualQueue().length;
+  const link = k => `<a href="#${k}" ${k === v ? 'aria-current="page"' : ''}>${ic(VIEWS[k].icon)}<span>${VIEWS[k].label}</span>${k === 'approvals' && pend + man ? `<span class="count">${pend + man}</span>` : ''}</a>`;
+  return `<aside class="side${UI.menu ? ' open' : ''}">
+    <div class="brand"><div class="brand-mark">C</div><div><div class="brand-name">Content Studio</div><div class="brand-sub">ทีมคอนเทนต์</div></div></div>
+    <nav class="nav nav-group"><div class="nav-label">Workspace</div>${['overview', 'calendar', 'library', 'approvals', 'reports', 'favorites'].map(link).join('')}</nav>
+    <nav class="nav nav-group"><div class="nav-label">ตั้งค่า</div>${['channels', 'team'].map(link).join('')}</nav>
+    <div class="side-foot">
+      <div class="demo-note">ตัวอย่างนี้ใช้ข้อมูลจำลอง การเชื่อมต่อและการโพสต์เป็นการจำลองขั้นตอน สิ่งที่ทำจะเก็บไว้ในเบราว์เซอร์นี้</div>
+      <button class="btn sm ghost" data-act="reset">${ic('undo', 'sm')}รีเซ็ตข้อมูลตัวอย่าง</button>
+    </div>
+  </aside>`;
+}
+
+function topbar(v) {
+  const u = me();
+  const dark = effectiveTheme() === 'dark';
+  return `<header class="topbar">
+    <button class="btn icon ghost menu-btn" data-act="menu" aria-label="เปิดเมนู">${ic('menu')}</button>
+    <div class="crumb"><span class="hide-sm">Content Studio</span><span class="hide-sm faint">/</span><b>${VIEWS[v].label}</b></div>
+    <div class="top-actions">
+      ${can('create') ? `<button class="btn primary sm" data-act="new">${ic('plus', 'sm')}<span class="hide-sm">สร้างคอนเทนต์</span></button>` : ''}
+      <button class="btn icon ghost" data-act="theme" aria-label="สลับธีม">${ic(dark ? 'sun' : 'moon')}</button>
+      <button class="me-chip" data-act="logout" title="สลับผู้ใช้">${av(u.id)}<span class="who"><b>${esc(u.nick)}</b><small>${ROLES[u.role].label}</small></span>${ic('logout', 'sm')}</button>
+    </div>
+  </header>`;
+}
+const effectiveTheme = () => document.documentElement.dataset.theme || (matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+
+function pageHead(eyebrow, title, sub, actions = '') {
+  return `<div class="page-head"><div><div class="eyebrow">${eyebrow}</div><h1>${title}</h1>${sub ? `<p class="muted">${sub}</p>` : ''}</div>${actions ? `<div class="actions">${actions}</div>` : ''}</div>`;
+}
+
+/* ---------- login ---------- */
+function viewLogin() {
+  const bullets = {
+    admin: ['เห็นและทำได้ทุกเมนู', 'เชื่อมต่อ Facebook, YouTube, TikTok ฯลฯ', 'กำหนดบทบาทให้สมาชิกทีม'],
+    manager: ['อนุมัติหรือขอแก้คอนเทนต์', 'กดเผยแพร่ / ตั้งเวลาโพสต์', 'มอบหมายงานในปฏิทิน'],
+    creator: ['สร้างคอนเทนต์และส่งให้อนุมัติ', 'แก้ไขได้เฉพาะงานของตัวเอง', 'ยืนยันงานที่ต้องโพสต์เอง'],
+    analyst: ['ดูปฏิทินและรายงานผล', 'กรอกตัวเลขช่องทางที่ไม่มี API', 'แก้ไขคอนเทนต์ไม่ได้'],
+  };
+  return `<div class="login"><div class="login-box">
+    <div class="brand"><div class="brand-mark">C</div><div><div class="brand-name">Content Studio</div><div class="brand-sub">ตัวอย่างระบบจัดการคอนเทนต์</div></div></div>
+    <div style="display:flex;flex-direction:column;gap:6px"><h1>เลือกบัญชีเพื่อเข้าสู่ระบบ</h1>
+    <p class="muted">แต่ละบทบาทเห็นเมนูและปุ่มไม่เหมือนกัน ลองเข้าทีละบัญชีเพื่อเทียบได้ ระบบจริงจะล็อกอินด้วยอีเมลบริษัทหรือ Google Workspace</p></div>
+    <div class="login-users">${S.users.map(u => `<button class="ucard" data-act="login:${u.id}">
+      <div class="row" style="gap:10px">${av(u.id, true)}<div><b>${esc(u.name)}</b><div class="small muted">${esc(u.title)}</div></div></div>
+      <span class="pill t-accent plain" style="align-self:flex-start">${ROLES[u.role].label}</span>
+      <ul>${bullets[u.role].map(b => `<li>${b}</li>`).join('')}</ul></button>`).join('')}</div>
+  </div></div>`;
+}
+
+/* ---------- overview ---------- */
+function myTasks() {
+  const u = me(), t = [];
+  const push = (tone, icon, text, c, sub) => t.push({ tone, icon, text, c, sub });
+  if (can('approve')) S.content.filter(c => c.status === 'review').forEach(c => push('warn', 'approve', `อนุมัติ: ${c.title}`, c, `ส่งโดย ${user(c.owner).nick} · ลงวันที่ ${fmtD(c.date)}`));
+  if (can('publish')) S.content.filter(c => c.status === 'approved').forEach(c => push('accent', 'send', `ตั้งเวลา/เผยแพร่: ${c.title}`, c, `กำหนดลง ${fmtDT(c.date)}`));
+  S.content.filter(c => c.status === 'changes' && (c.owner === u.id || can('editAny'))).forEach(c => push('bad', 'pen', `แก้ตามคอมเมนต์: ${c.title}`, c, c.comments.length ? `“${c.comments[c.comments.length - 1].text.slice(0, 60)}…”` : ''));
+  if (can('manual')) manualQueue().filter(q => q.c.owner === u.id || can('editAny')).forEach(q => push('bad', 'hand', `โพสต์เองที่ ${CH[q.ch].name}: ${q.c.title}`, q.c, q.r.reason || ''));
+  if (u.role === 'creator') S.content.filter(c => c.owner === u.id && ['idea', 'draft'].includes(c.status) && daysBetween(NOW(), parse(c.date)) <= 7).forEach(c => push('info', 'clock', `ทำให้เสร็จก่อน ${fmtD(c.date)}: ${c.title}`, c, ST[c.status].label));
+  if (can('metrics')) missingMetrics().forEach(q => push('warn', 'chart', `กรอกผลลัพธ์ ${CH[q.ch].name}: ${q.c.title}`, q.c, 'ช่องทางนี้ดึงสถิติผ่าน API ไม่ได้'));
+  return t;
+}
+function viewsInWindow(fromDaysAgo, toDaysAgo) {
+  const now = NOW(); let v = 0, e = 0, n = 0;
+  for (const c of S.content) { if (c.status !== 'published') continue; const d = daysBetween(parse(c.date), now); if (d >= toDaysAgo && d < fromDaysAgo) { const t = totals(c); v += t.views; e += t.eng; n++; } }
+  return { v, e, n };
+}
+function delta(cur, prev) { if (!prev) return '<span class="faint">ไม่มีข้อมูลช่วงก่อน</span>'; const d = (cur - prev) / prev; return `<span class="${d >= 0 ? 'up' : 'down'}">${d >= 0 ? '▲' : '▼'} ${Math.abs(d * 100).toFixed(0)}%</span> เทียบช่วงก่อน`; }
+
+function viewOverview() {
+  const u = me(), now = NOW();
+  const pend = S.content.filter(c => c.status === 'review');
+  const ready = S.content.filter(c => ['approved', 'scheduled'].includes(c.status));
+  const man = manualQueue();
+  const cur = viewsInWindow(30, 0), prev = viewsInWindow(60, 30);
+  const tasks = myTasks();
+  const week = [...Array(7)].map((_, i) => addDays(startOfDay(now), i));
+  const top = S.content.filter(c => c.status === 'published' && daysBetween(parse(c.date), now) < 30).sort((a, b) => totals(b).views - totals(a).views).slice(0, 5);
+  const hour = now.getHours();
+  const greet = hour < 12 ? 'สวัสดีตอนเช้า' : hour < 17 ? 'สวัสดีตอนบ่าย' : 'สวัสดีตอนเย็น';
+  return `${pageHead(`${TH_D[now.getDay()]} ${now.getDate()} ${TH_MF[now.getMonth()]} ${now.getFullYear() + 543}`, `${greet}, ${esc(u.nick)}`, `คุณเข้าใช้งานในบทบาท <b>${ROLES[u.role].label}</b> · ${ROLES[u.role].desc}`)}
+  <div class="kpis">
+    <a class="tile${pend.length ? ' warn' : ''}" href="#approvals"><span class="eyebrow">รออนุมัติ</span><span class="k-val">${pend.length}</span><span class="k-sub">${pend.filter(c => daysBetween(now, parse(c.date)) <= 2).length} ชิ้นถึงคิวลงภายใน 2 วัน</span></a>
+    <a class="tile" href="#approvals"><span class="eyebrow">พร้อมเผยแพร่</span><span class="k-val">${ready.length}</span><span class="k-sub">ตั้งเวลาแล้ว ${ready.filter(c => c.status === 'scheduled').length} · รอกดเผยแพร่ ${ready.filter(c => c.status === 'approved').length}</span></a>
+    <a class="tile${man.length ? ' bad' : ''}" href="#approvals" data-act="aptab:manual"><span class="eyebrow">ต้องโพสต์เอง</span><span class="k-val">${man.length}</span><span class="k-sub">ช่องทางที่ระบบโพสต์ให้ไม่ได้</span></a>
+    <a class="tile" href="#reports"><span class="eyebrow">ยอดวิว 30 วัน</span><span class="k-val">${fmtN(cur.v)}</span><span class="k-sub">${delta(cur.v, prev.v)}</span></a>
+  </div>
+  <div class="cols">
+    <section class="card"><div class="card-head"><h2>งานของฉัน</h2><span class="pill t-neutral plain">${tasks.length}</span></div>
+      ${tasks.length ? `<div class="list">${tasks.slice(0, 8).map(t => `<div class="li" data-act="open:${t.c.id}"><span class="task-ico t-${t.tone}">${ic(t.icon, 'sm')}</span><div class="grow"><div class="title">${esc(t.text)}</div>${t.sub ? `<div class="sub">${esc(t.sub)}</div>` : ''}</div>${chbs(t.c.channels)}</div>`).join('')}</div>${tasks.length > 8 ? `<p class="small muted" style="margin-top:8px">และอีก ${tasks.length - 8} งาน</p>` : ''}` : '<div class="empty">ไม่มีงานค้าง</div>'}
+    </section>
+    <section class="card"><div class="card-head"><h2>สถานะช่องทาง</h2><a class="sp small" href="#channels">จัดการ</a></div>
+      <div class="list">${CH_ORDER.map(ch => { const st = S.channels[ch], c = CH[ch]; const m = c.post === 'no' ? 'manual' : !st.connected ? 'manual' : ch === 'tiktok' && !st.audited ? 'draft' : 'auto'; const u2 = MODE_UI[m];
+        return `<a class="li" href="#channels" style="text-decoration:none;color:inherit">${chb(ch)}<div class="grow"><div class="title">${c.name}</div><div class="sub">${c.post === 'no' ? 'ไม่มี API' : st.connected ? esc(st.account) : 'ยังไม่เชื่อมต่อ'}</div></div><span class="pill t-${u2.tone}">${u2.label}</span></a>`; }).join('')}</div>
+    </section>
+  </div>
+  <section class="card"><div class="card-head"><h2>7 วันข้างหน้า</h2><a class="sp small" href="#calendar">เปิดปฏิทิน</a></div>
+    <div class="scroll-x"><div class="week">${week.map(d => { const items = S.content.filter(c => parse(c.date).toDateString() === d.toDateString()).sort((a, b) => a.date.localeCompare(b.date));
+      return `<div class="wday${d.toDateString() === now.toDateString() ? ' today' : ''}"><div class="wd">${TH_D[d.getDay()]} ${d.getDate()} ${TH_M[d.getMonth()]}</div>${items.map(chipHTML).join('') || '<span class="small faint">ว่าง</span>'}</div>`; }).join('')}</div></div>
+  </section>
+  <div class="cols">
+    <section class="card"><div class="card-head"><h2>ผลงานดีสุด 30 วัน</h2><a class="sp small" href="#reports">ดูรายงาน</a></div>
+      <div class="list">${top.map((c, i) => { const t = totals(c); return `<div class="li" data-act="open:${c.id}"><span class="num faint" style="width:18px">${i + 1}</span><div class="grow"><div class="title">${esc(c.title)}</div><div class="sub">${fmtD(c.date)} · ER ${pct(t.er)}</div></div>${chbs(c.channels)}<b class="num">${fmtN(t.views)}</b></div>`; }).join('')}</div>
+    </section>
+    <section class="card"><div class="card-head"><h2>ความเคลื่อนไหวล่าสุด</h2></div>
+      <div class="list">${S.log.slice(0, 7).map(l => { const c = getC(l.cid); return `<div class="li" ${c ? `data-act="open:${c.id}"` : ''}>${av(l.uid)}<div class="grow"><div class="title"><b>${esc(user(l.uid).nick)}</b> ${esc(l.text)}${c ? ` · ${esc(c.title)}` : ''}</div><div class="sub">${ago(l.at)}</div></div></div>`; }).join('')}</div>
+    </section>
+  </div>`;
+}
+function chipHTML(c) {
+  const d = parse(c.date);
+  return `<div class="chip s-${ST[c.status].tone}" data-act="open:${c.id}" title="${esc(c.title)} · ${ST[c.status].label}"><span class="tm">${pad(d.getHours())}:${pad(d.getMinutes())}</span><span class="tt">${esc(c.title)}</span></div>`;
+}
+
+/* ---------- calendar ---------- */
+function calFilter(c) {
+  if (UI.calCh !== 'all' && !c.channels.includes(UI.calCh)) return false;
+  if (UI.calSt !== 'all' && c.status !== UI.calSt) return false;
+  if (UI.calMine && c.owner !== S.uid) return false;
+  return true;
+}
+function viewCalendar() {
+  const now = NOW();
+  if (!UI.cal) UI.cal = { y: now.getFullYear(), m: now.getMonth() };
+  const { y, m } = UI.cal;
+  const first = new Date(y, m, 1), last = new Date(y, m + 1, 0);
+  const start = addDays(first, -((first.getDay() + 6) % 7));
+  const end = addDays(last, (7 - last.getDay()) % 7);
+  const items = S.content.filter(calFilter);
+  const byDay = {}; for (const c of items) (byDay[c.date.slice(0, 10)] ||= []).push(c);
+  Object.values(byDay).forEach(a => a.sort((p, q) => p.date.localeCompare(q.date)));
+  if (!UI.calDay) UI.calDay = dayKey(now);
+  let cells = '';
+  for (let d = start; d <= end; d = addDays(d, 1)) {
+    const k = dayKey(d), list = byDay[k] || [];
+    const cls = ['cell', d.getMonth() !== m ? 'out' : '', k === dayKey(now) ? 'today' : '', k === UI.calDay ? 'sel' : ''].join(' ');
+    cells += `<div class="${cls}" data-act="calday:${k}">
+      <div class="dn"><span>${d.getDate()}</span>${can('create') ? `<button class="add" data-act="new:${k}" aria-label="เพิ่มคอนเทนต์วันที่ ${d.getDate()}">${ic('plus', 'sm')}</button>` : ''}</div>
+      ${list.slice(0, 3).map(chipHTML).join('')}${list.length > 3 ? `<span class="more">+ อีก ${list.length - 3}</span>` : ''}
+      <div class="dots">${list.map(c => `<span class="dot d-${ST[c.status].tone}"></span>`).join('')}</div></div>`;
+  }
+  const sel = (byDay[UI.calDay] || []);
+  const selD = parse(UI.calDay + 'T00:00');
+  const opt = (v, cur, label) => `<option value="${v}" ${v === cur ? 'selected' : ''}>${label}</option>`;
+  return `${pageHead('ตารางงานทีม', 'ปฏิทินคอนเทนต์', 'ทุกชิ้นที่วางแผนไว้ แยกสีตามสถานะ คลิกที่งานเพื่อดูรายละเอียด')}
+  <div class="cal-bar">
+    <button class="btn icon" data-act="calmove:-1" aria-label="เดือนก่อน">${ic('left')}</button>
+    <div class="cal-title">${TH_MF[m]} ${y + 543}</div>
+    <button class="btn icon" data-act="calmove:1" aria-label="เดือนถัดไป">${ic('right')}</button>
+    <button class="btn sm" data-act="calmove:0">วันนี้</button>
+    <div class="filters" style="margin-left:auto">
+      <select class="select" id="cal-ch" data-change="calCh" aria-label="กรองช่องทาง">${opt('all', UI.calCh, 'ทุกช่องทาง')}${CH_ORDER.map(k => opt(k, UI.calCh, CH[k].name)).join('')}</select>
+      <select class="select" id="cal-st" data-change="calSt" aria-label="กรองสถานะ">${opt('all', UI.calSt, 'ทุกสถานะ')}${Object.keys(ST).map(k => opt(k, UI.calSt, ST[k].label)).join('')}</select>
+      <label class="check"><input type="checkbox" id="cal-mine" data-change="calMine" ${UI.calMine ? 'checked' : ''}>เฉพาะงานของฉัน</label>
+    </div>
+  </div>
+  <div class="legend">${Object.values(ST).map(s => `<span><i class="dot d-${s.tone}"></i>${s.label}</span>`).join('')}</div>
+  <div class="cal">${['จ.', 'อ.', 'พ.', 'พฤ.', 'ศ.', 'ส.', 'อา.'].map(d => `<div class="dow">${d}</div>`).join('')}${cells}</div>
+  <section class="card"><div class="card-head"><h2>${TH_D[selD.getDay()]} ${selD.getDate()} ${TH_MF[selD.getMonth()]}</h2><span class="pill t-neutral plain">${sel.length} ชิ้น</span>${can('create') ? `<button class="btn sm sp" data-act="new:${UI.calDay}">${ic('plus', 'sm')}เพิ่มงานวันนี้</button>` : ''}</div>
+    ${sel.length ? `<div class="list">${sel.map(rowLI).join('')}</div>` : '<div class="empty">ยังไม่มีคอนเทนต์ในวันนี้</div>'}
+  </section>`;
+}
+function rowLI(c) {
+  const d = parse(c.date);
+  return `<div class="li" data-act="open:${c.id}"><span class="num muted" style="width:44px">${pad(d.getHours())}:${pad(d.getMinutes())}</span><div class="grow"><div class="title">${esc(c.title)}</div><div class="sub">${TYPES[c.type]} · ${esc(user(c.owner).nick)}</div></div>${chbs(c.channels)}${statusPill(c.status)}</div>`;
+}
+
+/* ---------- library ---------- */
+function libRows(list, emptyText) {
+  if (!list.length) return `<div class="empty">${emptyText}</div>`;
+  return `<div class="scroll-x"><table class="tbl"><thead><tr><th style="width:36px"></th><th>คอนเทนต์</th><th>ช่องทาง</th><th>ผู้รับผิดชอบ</th><th>วันลง</th><th>สถานะ</th><th class="r">ยอดวิว</th></tr></thead><tbody>
+  ${list.map(c => { const t = totals(c); return `<tr data-act="open:${c.id}">
+    <td><button class="star${isFav(c) ? ' on' : ''}" data-act="fav:${c.id}" aria-label="รายการโปรด">${ic('star', isFav(c) ? 'filled' : '')}</button></td>
+    <td><div class="t-title">${esc(c.title)}</div><div class="small muted">${TYPES[c.type]} · ${esc(c.pillar)}</div></td>
+    <td>${chbs(c.channels)}</td><td><span class="row" style="gap:8px;flex-wrap:nowrap">${av(c.owner)}${esc(user(c.owner).nick)}</span></td>
+    <td class="num">${fmtD(c.date)}</td><td>${statusPill(c.status)}</td><td class="r num">${c.status === 'published' ? fmtN(t.views) : '–'}</td></tr>`; }).join('')}
+  </tbody></table></div>`;
+}
+function libList() {
+  const q = UI.libQ.trim().toLowerCase();
+  return S.content.filter(c => (!q || c.title.toLowerCase().includes(q) || c.caption.toLowerCase().includes(q))
+    && (UI.libSt === 'all' || c.status === UI.libSt) && (UI.libCh === 'all' || c.channels.includes(UI.libCh)) && (UI.libOwner === 'all' || c.owner === UI.libOwner))
+    .sort((a, b) => b.date.localeCompare(a.date));
+}
+function viewLibrary() {
+  const opt = (v, cur, label) => `<option value="${v}" ${v === cur ? 'selected' : ''}>${label}</option>`;
+  const list = libList();
+  return `${pageHead('ทุกชิ้นงาน', 'คลังคอนเทนต์', 'ค้นหา กรอง และกดดาวเก็บงานที่อยากกลับมาดูเป็นรายการโปรด')}
+  <div class="filters">
+    <input class="input" id="lib-q" type="search" placeholder="ค้นหาชื่อหรือแคปชัน" value="${esc(UI.libQ)}" data-input="libQ" aria-label="ค้นหา">
+    <select class="select" id="lib-st" data-change="libSt" aria-label="สถานะ">${opt('all', UI.libSt, 'ทุกสถานะ')}${Object.keys(ST).map(k => opt(k, UI.libSt, ST[k].label)).join('')}</select>
+    <select class="select" id="lib-ch" data-change="libCh" aria-label="ช่องทาง">${opt('all', UI.libCh, 'ทุกช่องทาง')}${CH_ORDER.map(k => opt(k, UI.libCh, CH[k].name)).join('')}</select>
+    <select class="select" id="lib-ow" data-change="libOwner" aria-label="ผู้รับผิดชอบ">${opt('all', UI.libOwner, 'ทุกคน')}${S.users.map(u => opt(u.id, UI.libOwner, u.nick)).join('')}</select>
+  </div>
+  <section class="card" style="padding:6px 8px"><div id="lib-list">${libRows(list, 'ไม่พบคอนเทนต์ที่ตรงกับตัวกรอง')}</div></section>`;
+}
+
+/* ---------- approvals ---------- */
+function viewApprovals() {
+  const review = S.content.filter(c => c.status === 'review').sort((a, b) => a.date.localeCompare(b.date));
+  const ready = S.content.filter(c => ['approved', 'scheduled'].includes(c.status)).sort((a, b) => a.date.localeCompare(b.date));
+  const man = manualQueue();
+  const tab = UI.apTab;
+  const tabBtn = (k, label, n) => `<button role="tab" aria-selected="${tab === k}" data-act="aptab:${k}">${label}<span class="n">${n}</span></button>`;
+  let body = '';
+  if (tab === 'review') {
+    body = (!can('approve') ? `<div class="banner">${ic('info')}<div>คุณดูคิวได้ แต่การอนุมัติทำได้เฉพาะหัวหน้าคอนเทนต์และผู้ดูแลระบบ</div></div>` : '') +
+      (review.length ? review.map(c => qCard(c, can('approve') ? `<button class="btn ok" data-act="approve:${c.id}">${ic('check', 'sm')}อนุมัติ</button><button class="btn bad" data-act="open:${c.id}:changes">${ic('pen', 'sm')}ขอแก้ไข</button>` : '')).join('') : '<div class="card empty">ไม่มีงานรออนุมัติ</div>');
+  } else if (tab === 'ready') {
+    body = (!can('publish') ? `<div class="banner">${ic('info')}<div>คุณดูรายการได้ แต่การกดเผยแพร่ทำได้เฉพาะหัวหน้าคอนเทนต์และผู้ดูแลระบบ</div></div>` : '') +
+      (ready.length ? ready.map(c => qCard(c, can('publish') ? (c.status === 'approved'
+        ? `<button class="btn primary" data-act="publish:${c.id}">${ic('send', 'sm')}เผยแพร่ตอนนี้</button><button class="btn" data-act="schedule:${c.id}">${ic('clock', 'sm')}ตั้งเวลาตามปฏิทิน</button>`
+        : `<button class="btn primary" data-act="publish:${c.id}">${ic('send', 'sm')}เผยแพร่ตอนนี้</button><button class="btn" data-act="unschedule:${c.id}">ยกเลิกตั้งเวลา</button>`) : '')).join('') : '<div class="card empty">ยังไม่มีงานที่อนุมัติแล้ว</div>');
+  } else {
+    body = `<div class="banner warn">${ic('hand')}<div>รายการนี้คือช่องทางที่ระบบโพสต์ให้ไม่ได้ (ไม่มี API, ยังไม่เชื่อมต่อบัญชี หรือ API ไม่รองรับประเภทงาน) คัดลอกแคปชันไปโพสต์เอง แล้ววางลิงก์โพสต์เพื่อปิดงาน ระบบจะใช้ลิงก์นั้นติดตามผล</div></div>` +
+      (man.length ? `<section class="card"><div class="list">${man.map(({ c, ch, r }) => `<div class="pub-row">${chb(ch, true)}<div class="what">
+        <div class="line1"><b>${esc(c.title)}</b><span class="pill t-${r.state === 'draft-sent' ? 'warn' : 'bad'}">${r.state === 'draft-sent' ? 'แบบร่างรออยู่ในแอป' : 'ต้องโพสต์เอง'}</span></div>
+        <div class="small muted">${CH[ch].name} · ${esc(r.reason || '')} · ผู้รับผิดชอบ ${esc(user(c.owner).nick)}</div>
+        ${manualBox(c, ch)}</div></div>`).join('')}</div></section>` : '<div class="card empty">ไม่มีงานที่ต้องโพสต์เอง</div>');
+  }
+  return `${pageHead('ขั้นตอนก่อนขึ้นโพสต์', 'อนุมัติ & เผยแพร่', 'ครีเอเตอร์ส่งงาน → หัวหน้าอนุมัติ → กดเผยแพร่ ระบบโพสต์ให้ทุกช่องทางที่ทำได้ และแจ้งช่องทางที่ต้องโพสต์เอง')}
+  <div class="tabs" role="tablist">${tabBtn('review', 'รออนุมัติ', review.length)}${tabBtn('ready', 'พร้อมเผยแพร่', ready.length)}${tabBtn('manual', 'ต้องโพสต์เอง', man.length)}</div>
+  ${body}`;
+}
+function qCard(c, actions) {
+  return `<section class="card qcard"><div style="min-width:0;display:flex;flex-direction:column;gap:8px">
+    <div class="row" style="gap:8px">${statusPill(c.status)}<span class="small muted">${TYPES[c.type]} · ${esc(c.pillar)}</span></div>
+    <h3 style="cursor:pointer" data-act="open:${c.id}">${esc(c.title)}</h3>
+    <div class="small muted row" style="gap:8px">${av(c.owner)}${esc(user(c.owner).nick)} · ${c.status === 'scheduled' ? 'จะโพสต์' : 'กำหนดลง'} ${fmtDT(c.date)}</div>
+    <div class="caption-box">${esc(c.caption)}</div>
+    <div class="cap-row">${c.channels.map(ch => modeChip(ch, c.type)).join('')}</div>
+  </div><div class="q-actions">${actions}<button class="btn ghost" data-act="open:${c.id}">ดูรายละเอียด</button></div></section>`;
+}
+function manualBox(c, ch) {
+  if (!can('manual')) return '<div class="small faint">รอทีมคอนเทนต์โพสต์และยืนยัน</div>';
+  return `<div class="manual-box"><button class="btn sm" data-act="copy:${c.id}">${ic('copy', 'sm')}คัดลอกแคปชัน</button>
+    <a class="btn sm" href="${CH[ch].url}" target="_blank" rel="noopener">${ic('ext', 'sm')}เปิด ${CH[ch].name}</a>
+    <input class="input" id="url-${c.id}-${ch}" placeholder="วางลิงก์โพสต์ที่โพสต์แล้ว" aria-label="ลิงก์โพสต์">
+    <button class="btn sm ok" data-act="mdone:${c.id}:${ch}">${ic('check', 'sm')}โพสต์แล้ว</button></div>`;
+}
+
+/* ---------- reports ---------- */
+const DECAY = [.30, .18, .12, .09, .07, .06, .05, .04, .03, .02, .015, .01, .008, .007];
+function dailySeries(days) {
+  const now = startOfDay(NOW()); const start = addDays(now, -(days - 1));
+  const arr = [...Array(days)].map((_, i) => ({ d: addDays(start, i), v: 0 }));
+  for (const c of S.content) { if (c.status !== 'published') continue; const v = totals(c).views; const p = daysBetween(start, parse(c.date));
+    DECAY.forEach((w, i) => { const idx = p + i; if (idx >= 0 && idx < days) arr[idx].v += v * w; }); }
+  return arr;
+}
+function niceMax(m) { if (m <= 0) return 10; const p = Math.pow(10, Math.floor(Math.log10(m))); const f = m / p; return (f <= 1 ? 1 : f <= 2 ? 2 : f <= 2.5 ? 2.5 : f <= 5 ? 5 : 10) * p; }
+function areaChart(series) {
+  const W = 760, H = 240, L = 48, R = 14, T = 14, B = 28, n = series.length;
+  const max = niceMax(Math.max(...series.map(s => s.v)) * 1.05);
+  const x = i => L + (W - L - R) * (n === 1 ? .5 : i / (n - 1)), y = v => T + (H - T - B) * (1 - v / max);
+  let grid = '';
+  for (let k = 0; k <= 4; k++) { const v = max * k / 4, yy = y(v); grid += `<line class="grid" x1="${L}" x2="${W - R}" y1="${yy}" y2="${yy}"/><text class="lbl" x="${L - 8}" y="${yy + 4}" text-anchor="end">${fmtN(v)}</text>`; }
+  const step = Math.ceil(n / 6);
+  let xl = ''; series.forEach((s, i) => { if ((n - 1 - i) % step === 0) xl += `<text class="lbl" x="${x(i)}" y="${H - 8}" text-anchor="${i === n - 1 ? 'end' : 'middle'}">${fmtD(s.d)}</text>`; });
+  const pts = series.map((s, i) => `${x(i).toFixed(1)},${y(s.v).toFixed(1)}`);
+  const line = 'M' + pts.join('L'), area = `${line}L${x(n - 1)},${y(0)}L${x(0)},${y(0)}Z`;
+  return `<div class="chart-wrap" id="trend" data-series='${JSON.stringify(series.map(s => [fmtD(s.d), Math.round(s.v)]))}' data-geo="${[W, H, L, R, T, B, max].join(',')}">
+    <svg class="chart" viewBox="0 0 ${W} ${H}" role="img" aria-label="ยอดวิวรายวัน">${grid}${xl}<path class="area" d="${area}"/><path class="line" d="${line}"/>
+    <circle class="end" cx="${x(n - 1)}" cy="${y(series[n - 1].v)}" r="4.5"/><line class="guide" id="g-line" x1="0" x2="0" y1="${T}" y2="${H - B}" visibility="hidden"/><circle class="end" id="g-dot" r="4" visibility="hidden"/>
+    <rect id="g-hit" x="${L}" y="${T}" width="${W - L - R}" height="${H - T - B}" fill="transparent"/></svg><div class="tip" id="g-tip" hidden></div></div>`;
+}
+function bindChart() {
+  const w = $('#trend'); if (!w) return;
+  const data = JSON.parse(w.dataset.series); const [W, H, L, R, T, B, max] = w.dataset.geo.split(',').map(Number);
+  const svg = $('svg', w), hit = $('#g-hit'), gl = $('#g-line'), gd = $('#g-dot'), tip = $('#g-tip'); const n = data.length;
+  const move = ev => { const r = svg.getBoundingClientRect(); const sx = (ev.clientX - r.left) / r.width * W; const i = Math.max(0, Math.min(n - 1, Math.round((sx - L) / (W - L - R) * (n - 1))));
+    const xx = L + (W - L - R) * (n === 1 ? .5 : i / (n - 1)), yy = T + (H - T - B) * (1 - data[i][1] / max);
+    gl.setAttribute('x1', xx); gl.setAttribute('x2', xx); gl.setAttribute('visibility', 'visible'); gd.setAttribute('cx', xx); gd.setAttribute('cy', yy); gd.setAttribute('visibility', 'visible');
+    tip.hidden = false; tip.style.left = (xx / W * r.width) + 'px'; tip.style.top = (yy / H * r.height) + 'px'; tip.textContent = `${data[i][0]} · ${data[i][1].toLocaleString('en-US')} วิว`; };
+  const out = () => { gl.setAttribute('visibility', 'hidden'); gd.setAttribute('visibility', 'hidden'); tip.hidden = true; };
+  hit.addEventListener('pointermove', move); hit.addEventListener('pointerleave', out);
+}
+function viewReports() {
+  const days = UI.range, now = NOW();
+  const inRange = S.content.filter(c => c.status === 'published' && daysBetween(parse(c.date), now) < days);
+  const cur = viewsInWindow(days, 0), prev = viewsInWindow(days * 2, days);
+  const er = cur.v ? cur.e / cur.v : 0, erPrev = prev.v ? prev.e / prev.v : 0;
+  const byCh = {}; for (const ch of CH_ORDER) byCh[ch] = { v: 0, e: 0, api: 0, man: 0, miss: 0 };
+  for (const c of inRange) for (const ch of c.channels) { const m = c.metrics[ch], b = byCh[ch]; if (!m) { if (c.results[ch]) b.miss++; continue; } b.v += m.views || 0; b.e += (m.likes || 0) + (m.comments || 0) + (m.shares || 0); m.src === 'api' ? b.api++ : b.man++; }
+  const chs = CH_ORDER.filter(ch => byCh[ch].v || byCh[ch].miss).sort((a, b) => byCh[b].v - byCh[a].v);
+  const maxV = Math.max(1, ...chs.map(ch => byCh[ch].v));
+  const sorted = [...inRange].sort((a, b) => UI.sort === 'er' ? totals(b).er - totals(a).er : UI.sort === 'date' ? b.date.localeCompare(a.date) : totals(b).views - totals(a).views);
+  const miss = missingMetrics();
+  const rangeBtn = d => `<button aria-pressed="${days === d}" data-act="range:${d}">${d} วัน</button>`;
+  return `${pageHead('ผลลัพธ์จากทุกช่องทาง', 'รายงานผล', `ซิงก์ล่าสุด ${ago(S.lastSync)} · ระบบจริงจะดึงข้อมูลจาก API อัตโนมัติทุก 6 ชั่วโมง`,
+    `<div class="seg">${rangeBtn(7)}${rangeBtn(30)}${rangeBtn(90)}</div><button class="btn" data-act="sync">${ic('refresh', 'sm')}ดึงข้อมูลล่าสุด</button>`)}
+  <div class="kpis">
+    <div class="tile"><span class="eyebrow">ยอดวิวรวม</span><span class="k-val">${fmtN(cur.v)}</span><span class="k-sub">${delta(cur.v, prev.v)}</span></div>
+    <div class="tile"><span class="eyebrow">Engagement</span><span class="k-val">${fmtN(cur.e)}</span><span class="k-sub">${delta(cur.e, prev.e)}</span></div>
+    <div class="tile"><span class="eyebrow">Engagement rate</span><span class="k-val">${pct(er)}</span><span class="k-sub">${erPrev ? `${er >= erPrev ? '<span class="up">▲' : '<span class="down">▼'} ${Math.abs((er - erPrev) * 100).toFixed(1)} จุด</span> เทียบช่วงก่อน` : '<span class="faint">ไม่มีข้อมูลช่วงก่อน</span>'}</span></div>
+    <div class="tile"><span class="eyebrow">ชิ้นที่เผยแพร่</span><span class="k-val">${cur.n}</span><span class="k-sub">${prev.n ? `ช่วงก่อน ${prev.n} ชิ้น` : '<span class="faint">ไม่มีข้อมูลช่วงก่อน</span>'}</span></div>
+  </div>
+  <div class="cols">
+    <section class="card"><div class="card-head"><h2>ยอดวิวรายวัน</h2><span class="sp small muted">รวมทุกช่องทาง</span></div>${areaChart(dailySeries(days))}</section>
+    <section class="card"><div class="card-head"><h2>แยกตามช่องทาง</h2></div>
+      <div class="bars">${chs.map(ch => { const b = byCh[ch]; const manual = b.man > b.api; return `<div class="bar-row"><div class="nm">${chb(ch)}<span>${CH[ch].name}</span></div><div style="display:flex;flex-direction:column;gap:3px;min-width:0"><div class="bar-track"><div class="bar-fill${manual ? ' manual' : ''}" style="width:${(b.v / maxV * 100).toFixed(1)}%"></div></div><div class="small faint">${b.api ? `<span class="src api">API ${b.api}</span> ` : ''}${b.man ? `<span class="src manual">กรอกเอง ${b.man}</span> ` : ''}${b.miss ? `<span class="src miss">ยังไม่มีตัวเลข ${b.miss}</span>` : ''} · ER ${b.v && CH[ch].fields.includes('likes') ? pct(b.e / b.v) : '–'}</div></div><b class="num" style="text-align:right">${fmtN(b.v)}</b></div>`; }).join('') || '<div class="empty">ยังไม่มีข้อมูลในช่วงนี้</div>'}</div>
+    </section>
+  </div>
+  ${miss.length ? `<section class="card"><div class="card-head"><h2>ตัวเลขที่ยังขาด</h2><span class="pill t-warn plain">${miss.length}</span><span class="sp small muted">ช่องทางที่ไม่มี API ให้ดึงสถิติ ต้องกรอกเอง</span></div>
+    <div class="list">${miss.map(({ c, ch }) => `<div class="li" data-act="open:${c.id}">${chb(ch)}<div class="grow"><div class="title">${esc(c.title)}</div><div class="sub">${CH[ch].name} · โพสต์เมื่อ ${fmtD(c.date)}</div></div>${can('metrics') ? `<button class="btn sm" data-act="metrics:${c.id}:${ch}">${ic('pen', 'sm')}กรอกตัวเลข</button>` : ''}</div>`).join('')}</div></section>` : ''}
+  <section class="card" style="padding:6px 8px"><div class="card-head" style="padding:10px 10px 0"><h2>ผลรายคอนเทนต์</h2>
+    <select class="select sp" id="rep-sort" data-change="sort" style="width:auto" aria-label="เรียงตาม"><option value="views" ${UI.sort === 'views' ? 'selected' : ''}>เรียงตามยอดวิว</option><option value="er" ${UI.sort === 'er' ? 'selected' : ''}>เรียงตาม ER</option><option value="date" ${UI.sort === 'date' ? 'selected' : ''}>ล่าสุดก่อน</option></select></div>
+    ${sorted.length ? `<div class="scroll-x"><table class="tbl"><thead><tr><th style="width:36px"></th><th>คอนเทนต์</th><th>ช่องทาง</th><th class="r">ยอดวิว</th><th class="r">Engagement</th><th class="r">ER</th><th>ที่มาของข้อมูล</th></tr></thead><tbody>
+    ${sorted.map(c => { const t = totals(c); const api = c.channels.filter(ch => c.metrics[ch]?.src === 'api').length, mn = c.channels.filter(ch => c.metrics[ch]?.src === 'manual').length, ms = c.channels.filter(ch => !c.metrics[ch]).length;
+      return `<tr data-act="open:${c.id}"><td><button class="star${isFav(c) ? ' on' : ''}" data-act="fav:${c.id}" aria-label="รายการโปรด">${ic('star', isFav(c) ? 'filled' : '')}</button></td>
+      <td><div class="t-title">${esc(c.title)}</div><div class="small muted">${fmtD(c.date)} · ${TYPES[c.type]}</div></td><td>${chbs(c.channels)}</td>
+      <td class="r num">${fmtN(t.views)}</td><td class="r num">${fmtN(t.eng)}</td><td class="r num">${pct(t.er)}</td>
+      <td>${api ? `<span class="src api">API ${api}</span> ` : ''}${mn ? `<span class="src manual">กรอกเอง ${mn}</span> ` : ''}${ms ? `<span class="src miss">ขาด ${ms}</span>` : ''}</td></tr>`; }).join('')}
+    </tbody></table></div>` : '<div class="empty">ยังไม่มีคอนเทนต์ที่เผยแพร่ในช่วงนี้</div>'}
+  </section>`;
+}
+
+/* ---------- favorites ---------- */
+function viewFavorites() {
+  const list = S.content.filter(isFav).sort((a, b) => b.date.localeCompare(a.date));
+  return `${pageHead('เก็บไว้ดูภายหลัง', 'รายการโปรด', 'กดดาวที่คอนเทนต์ใดก็ได้เพื่อเก็บไว้ที่นี่ รายการโปรดแยกตามผู้ใช้แต่ละคน')}
+  <section class="card" style="padding:6px 8px">${libRows(list, 'ยังไม่มีรายการโปรด กดดาวในคลังคอนเทนต์หรือรายงานผลเพื่อเพิ่ม')}</section>`;
+}
+
+/* ---------- channels ---------- */
+function viewChannels() {
+  const conn = CH_ORDER.filter(ch => CH[ch].post !== 'no' && S.channels[ch].connected).length;
+  const withApi = CH_ORDER.filter(ch => CH[ch].post !== 'no').length;
+  const adm = can('channels');
+  return `${pageHead('การเชื่อมต่อ API', 'ช่องทางที่เชื่อมต่อ', `เชื่อมต่อแล้ว ${conn} จาก ${withApi} ช่องทางที่มี API · ช่องทางที่โพสต์อัตโนมัติไม่ได้ ระบบจะสร้างงาน "ต้องโพสต์เอง" ให้ทันทีที่กดเผยแพร่`)}
+  ${adm ? '' : `<div class="banner">${ic('info')}<div>การเชื่อมต่อหรือตัดการเชื่อมต่อทำได้เฉพาะผู้ดูแลระบบ คุณดูสถานะและข้อจำกัดของแต่ละช่องทางได้</div></div>`}
+  <div class="legend"><span><span class="cap yes">ได้</span> ทำผ่าน API ได้เต็มที่</span><span><span class="cap partial">บางส่วน</span> ทำได้แต่มีเงื่อนไข</span><span><span class="cap no">ไม่ได้</span> ต้องทำเอง</span></div>
+  <div class="ch-grid">${CH_ORDER.map(ch => { const c = CH[ch], st = S.channels[ch];
+    const status = c.post === 'no' ? '<span class="pill t-warn">ไม่มี API · โพสต์เอง</span>' : st.connected ? '<span class="pill t-ok">เชื่อมต่อแล้ว</span>' : '<span class="pill t-neutral">ยังไม่เชื่อมต่อ</span>';
+    return `<section class="card ch-card">
+      <div class="ch-top">${chb(ch, true)}<div class="grow"><h2>${c.name}</h2><div class="small muted">${c.api}</div>${st.connected ? `<div class="small" style="margin-top:2px">บัญชี: <b>${esc(st.account)}</b></div>` : ''}</div>${status}</div>
+      <div>
+        <div class="capline"><span class="k">โพสต์อัตโนมัติ</span><div class="v"><span><span class="cap ${c.post}">${capLabel(c.post)}</span></span><span>${c.postNote}</span></div></div>
+        <div class="capline"><span class="k">ดึงสถิติ</span><div class="v"><span><span class="cap ${c.stats}">${capLabel(c.stats)}</span></span><span>${c.statsNote}</span></div></div>
+      </div>
+      <div class="req">${ic('info', 'sm')} ${c.req}</div>
+      ${ch === 'tiktok' && st.connected ? `<label class="check"><span class="switch"><input type="checkbox" id="tt-audit" data-change="audit" ${st.audited ? 'checked' : ''} ${adm ? '' : 'disabled'}><span></span></span>แอปผ่าน TikTok audit แล้ว (เปิดเพื่อจำลอง Direct Post)</label>` : ''}
+      <div class="ch-foot">${c.post === 'no' ? `<a class="btn" href="${c.url}" target="_blank" rel="noopener">${ic('ext', 'sm')}เปิด ${c.name}</a><span class="small muted">ไม่ต้องเชื่อมต่อ</span>`
+        : st.connected ? `<button class="btn" data-act="disconnect:${ch}" ${adm ? '' : 'disabled'}>ตัดการเชื่อมต่อ</button><button class="btn ghost" data-act="sync">${ic('refresh', 'sm')}ซิงก์สถิติ</button>`
+        : `<button class="btn primary" data-act="connect:${ch}" ${adm ? '' : 'disabled'}>${ic('link', 'sm')}เชื่อมต่อบัญชี</button>`}</div>
+    </section>`; }).join('')}</div>`;
+}
+
+/* ---------- team ---------- */
+function viewTeam() {
+  const adm = can('team'), myRole = me().role;
+  return `${pageHead('สิทธิ์การใช้งาน', 'ทีมและสิทธิ์', 'กำหนดบทบาทให้สมาชิก แต่ละบทบาทเห็นเมนูและปุ่มต่างกัน')}
+  <section class="card" style="padding:6px 8px"><div class="scroll-x"><table class="tbl" style="min-width:620px"><thead><tr><th>สมาชิก</th><th>ตำแหน่ง</th><th>บทบาท</th><th class="r">งานที่ถืออยู่</th></tr></thead><tbody>
+  ${S.users.map(u => `<tr style="cursor:default"><td><span class="row" style="gap:10px;flex-wrap:nowrap">${av(u.id)}<b>${esc(u.name)}</b>${u.id === S.uid ? '<span class="pill t-accent plain">คุณ</span>' : ''}</span></td><td class="muted">${esc(u.title)}</td>
+    <td>${adm && u.id !== S.uid ? `<select class="select" style="width:auto" id="role-${u.id}" data-change="role:${u.id}" aria-label="บทบาทของ ${esc(u.nick)}">${Object.keys(ROLES).map(r => `<option value="${r}" ${r === u.role ? 'selected' : ''}>${ROLES[r].label}</option>`).join('')}</select>` : `<span class="pill t-neutral plain">${ROLES[u.role].label}</span>`}</td>
+    <td class="r num">${S.content.filter(c => c.owner === u.id && c.status !== 'published').length}</td></tr>`).join('')}
+  </tbody></table></div></section>
+  <section class="card" style="padding:6px 8px"><div class="card-head" style="padding:10px 10px 0"><h2>สิทธิ์ของแต่ละบทบาท</h2></div><div class="scroll-x"><table class="tbl" style="min-width:620px"><thead><tr><th>สิ่งที่ทำได้</th>${Object.keys(ROLES).map(r => `<th class="r" style="${r === myRole ? 'color:var(--accent)' : ''}">${ROLES[r].label}</th>`).join('')}</tr></thead><tbody>
+  ${PERMS.map(p => `<tr style="cursor:default"><td>${p[1]}</td>${Object.keys(ROLES).map(r => `<td class="r">${p[2].includes(r) ? `<span style="color:var(--ok)">${ic('check', 'sm')}</span>` : '<span class="faint">–</span>'}</td>`).join('')}</tr>`).join('')}
+  </tbody></table></div></section>`;
+}
+
+/* ---------- drawer ---------- */
+function drawerHTML() {
+  if (!UI.drawer) return '';
+  const c = getC(UI.drawer.id); if (!c) return '';
+  const order = ['idea', 'draft', 'review', 'approved', 'published'];
+  const curIdx = c.status === 'changes' ? 2 : c.status === 'scheduled' ? 3 : order.indexOf(c.status);
+  const steps = order.map((s, i) => { const alert = c.status === 'changes' && i === 2; const label = alert ? 'ขอแก้ไข' : s === 'approved' && c.status === 'scheduled' ? 'ตั้งเวลาแล้ว' : ST[s].label;
+    return `<div class="step ${alert ? 'alert' : i < curIdx ? 'done' : i === curIdx ? 'cur' : ''}"><div class="bar"></div>${label}</div>`; }).join('');
+  const pub = c.status === 'published';
+  const chRows = c.channels.map(ch => {
+    let right;
+    if (pub) { const r = c.results[ch] || {};
+      right = r.state === 'posted' ? `<span class="pill t-ok">โพสต์อัตโนมัติแล้ว</span> <a class="small" href="${esc(r.url)}" target="_blank" rel="noopener">เปิดโพสต์</a>`
+        : r.state === 'manual-done' ? `<span class="pill t-ok">โพสต์เองแล้ว</span> <a class="small" href="${esc(r.url)}" target="_blank" rel="noopener">เปิดโพสต์</a>${r.by ? ` <span class="small muted">โดย ${esc(user(r.by).nick)}</span>` : ''}`
+        : r.state === 'draft-sent' ? `<span class="pill t-warn">แบบร่างรออยู่ในแอป ${CH[ch].name}</span>`
+        : `<span class="pill t-bad">ต้องโพสต์เอง</span> <span class="small muted">${esc(r.reason || '')}</span>`;
+      if (r.state === 'manual-todo' || r.state === 'draft-sent') right += manualBox(c, ch);
+    } else { const m = publishMode(ch, c.type), u = MODE_UI[m.mode];
+      right = `<span class="pill t-${u.tone}">${u.label}</span> <span class="small muted">${esc(m.reason)}</span>`; }
+    return `<div class="pub-row">${chb(ch, true)}<div class="what"><div class="line1"><b>${CH[ch].name}</b></div><div class="line1">${right}</div></div></div>`;
+  }).join('');
+  const metrics = pub ? `<section><div class="card-head" style="margin-bottom:8px"><h3>ผลลัพธ์</h3><span class="sp small muted">ซิงก์ล่าสุด ${ago(S.lastSync)}</span></div>
+    <div class="scroll-x"><table class="mtable"><thead><tr><th>ช่องทาง</th>${Object.values(FIELDS).map(f => `<th>${f}</th>`).join('')}<th>ที่มา</th></tr></thead><tbody>
+    ${c.channels.map(ch => { const m = c.metrics[ch]; return `<tr><td><span class="row" style="gap:6px;flex-wrap:nowrap">${chb(ch)}${CH[ch].name}</span></td>${Object.keys(FIELDS).map(k => `<td>${m ? fmtN(m[k]) : '–'}</td>`).join('')}
+      <td>${m ? `<span class="src ${m.src}">${m.src === 'api' ? 'API' : 'กรอกเอง'}</span>` : can('metrics') && c.results[ch] && !['manual-todo', 'draft-sent'].includes(c.results[ch].state) ? `<button class="btn sm" data-act="metrics:${c.id}:${ch}">กรอก</button>` : '<span class="src miss">ยังไม่มี</span>'}</td></tr>`; }).join('')}
+    </tbody></table></div><p class="small faint" style="margin-top:6px">“–” ในคอลัมน์หมายถึง API ของช่องทางนั้นไม่ให้ตัวเลขนี้</p></section>` : '';
+  const actions = drawerActions(c);
+  return `<div class="scrim" data-act="close"></div><aside class="drawer${UI.anim ? ' enter' : ''}" role="dialog" aria-label="${esc(c.title)}">
+    <div class="d-head">${statusPill(c.status)}<span class="small muted">${TYPES[c.type]}</span><span style="margin-left:auto"></span>
+      <button class="star${isFav(c) ? ' on' : ''}" data-act="fav:${c.id}" aria-label="รายการโปรด">${ic('star', isFav(c) ? 'filled' : '')}</button>
+      <button class="btn icon ghost" data-act="close" aria-label="ปิด">${ic('x')}</button></div>
+    <div class="d-body">
+      <div style="display:flex;flex-direction:column;gap:12px"><h2 style="font-size:20px">${esc(c.title)}</h2><div class="steps">${steps}</div></div>
+      <dl class="meta">
+        <dt>${pub ? 'เผยแพร่เมื่อ' : c.status === 'scheduled' ? 'ตั้งเวลาโพสต์' : 'กำหนดลง'}</dt><dd>${fmtDT(c.date)}</dd>
+        <dt>ผู้รับผิดชอบ</dt><dd>${av(c.owner)}${esc(user(c.owner).name)}</dd>
+        <dt>หมวด</dt><dd>${esc(c.pillar)}</dd>
+        <dt>ไฟล์งาน</dt><dd class="small">${esc(c.asset)}</dd>
+      </dl>
+      <section style="display:flex;flex-direction:column;gap:8px"><div class="row" style="justify-content:space-between"><h3>แคปชัน</h3><button class="btn sm ghost" data-act="copy:${c.id}">${ic('copy', 'sm')}คัดลอก</button></div><div class="caption-box">${esc(c.caption)}</div></section>
+      <section><h3 style="margin-bottom:4px">ช่องทาง & การโพสต์</h3>${chRows}</section>
+      ${metrics}
+      <section style="display:flex;flex-direction:column;gap:10px"><h3>ความคิดเห็น</h3>
+        ${c.comments.map(m => `<div class="comment">${av(m.uid)}<div class="bubble"><div class="small"><b>${esc(user(m.uid).nick)}</b> <span class="faint">${ago(m.at)}</span></div>${esc(m.text)}</div></div>`).join('') || '<p class="small muted">ยังไม่มีความคิดเห็น</p>'}
+        <form data-form="comment" data-id="${c.id}" class="row" style="flex-wrap:nowrap"><input class="input" id="cmt-${c.id}" name="text" placeholder="${UI.drawer.focus === 'changes' ? 'บอกสิ่งที่ต้องแก้ แล้วกด “ขอแก้ไข” ด้านล่าง' : 'พิมพ์ความคิดเห็น'}" aria-label="ความคิดเห็น" ${UI.drawer.focus === 'changes' ? 'autofocus' : ''}><button class="btn" type="submit" aria-label="ส่ง">${ic('send', 'sm')}</button></form>
+      </section>
+    </div>
+    ${actions ? `<div class="d-foot">${actions}</div>` : ''}
+  </aside>`;
+}
+function drawerActions(c) {
+  const a = [];
+  const owner = c.owner === S.uid;
+  if (canEdit(c)) a.push(`<button class="btn" data-act="edit:${c.id}">${ic('pen', 'sm')}แก้ไข</button>`);
+  if (c.status === 'idea' && canEdit(c)) a.push(`<button class="btn" data-act="status:${c.id}:draft">เริ่มทำ</button>`);
+  if (['idea', 'draft', 'changes'].includes(c.status) && (owner || can('editAny')) && can('create')) a.push(`<button class="btn primary" data-act="submit:${c.id}">${ic('send', 'sm')}ส่งให้อนุมัติ</button>`);
+  if (c.status === 'review' && can('approve')) { a.push(`<button class="btn ok" data-act="approve:${c.id}">${ic('check', 'sm')}อนุมัติ</button>`); a.push(`<button class="btn bad" data-act="reqchanges:${c.id}">ขอแก้ไข</button>`); }
+  if (c.status === 'review' && owner && !can('approve')) a.push(`<button class="btn" data-act="status:${c.id}:draft">ดึงกลับมาแก้</button>`);
+  if (c.status === 'approved' && can('publish')) { a.push(`<button class="btn primary" data-act="publish:${c.id}">${ic('send', 'sm')}เผยแพร่ตอนนี้</button>`); a.push(`<button class="btn" data-act="schedule:${c.id}">${ic('clock', 'sm')}ตั้งเวลา ${fmtD(c.date)}</button>`); }
+  if (c.status === 'scheduled' && can('publish')) { a.push(`<button class="btn primary" data-act="publish:${c.id}">${ic('send', 'sm')}เผยแพร่ตอนนี้</button>`); a.push(`<button class="btn" data-act="unschedule:${c.id}">ยกเลิกตั้งเวลา</button>`); }
+  if (c.status === 'published' && can('reports')) a.push(`<button class="btn" data-act="sync:${c.id}">${ic('refresh', 'sm')}ดึงสถิติล่าสุด</button>`);
+  return a.join('');
+}
+
+/* ---------- modals ---------- */
+function modalHTML() {
+  if (!UI.modal) return '';
+  const M = UI.modal; let inner = '';
+  if (M.kind === 'editor') inner = editorHTML(M);
+  if (M.kind === 'connect') inner = connectHTML(M.ch);
+  if (M.kind === 'metrics') inner = metricsHTML(M);
+  if (M.kind === 'publishing') inner = publishingHTML(M);
+  if (M.kind === 'reset') inner = `<div class="m-head"><h2>รีเซ็ตข้อมูลตัวอย่าง?</h2></div><div class="m-body"><p>ทุกอย่างที่ลองทำไว้ในเบราว์เซอร์นี้จะหายไป และกลับไปเป็นข้อมูลตั้งต้น</p></div><div class="m-foot"><button class="btn" data-act="mclose">ยกเลิก</button><button class="btn primary" data-act="doreset">รีเซ็ต</button></div>`;
+  return `<div class="modal-wrap"><div class="scrim" data-act="${M.kind === 'publishing' && !M.done ? '' : 'mclose'}"></div><div class="modal${UI.anim ? ' enter' : ''}" role="dialog" aria-modal="true" style="z-index:51">${inner}</div></div>`;
+}
+function chOptions(type, selected) {
+  return CH_ORDER.map(ch => { const m = publishMode(ch, type), u = MODE_UI[m.mode];
+    return `<label class="ch-opt"><input type="checkbox" name="ch" value="${ch}" ${selected.includes(ch) ? 'checked' : ''}>${chb(ch)}<span class="t"><b>${CH[ch].name}</b><span class="small" style="color:var(--${u.tone})">${u.label}</span><span class="small faint">${esc(m.reason)}</span></span></label>`; }).join('');
+}
+function editorHTML(M) {
+  const c = M.id ? getC(M.id) : { title: '', type: 'reel', pillar: PILLARS[0], date: (M.date || dayKey(addDays(NOW(), 1))) + 'T19:00', owner: S.uid, channels: ['facebook', 'instagram', 'tiktok'], caption: '', asset: '' };
+  const [d, t] = c.date.split('T');
+  const owners = can('assign') ? S.users.filter(u => u.role !== 'analyst') : [me()];
+  return `<form data-form="editor"><div class="m-head"><h2>${M.id ? 'แก้ไขคอนเทนต์' : 'สร้างคอนเทนต์ใหม่'}</h2><button type="button" class="btn icon ghost" data-act="mclose" style="margin-left:auto" aria-label="ปิด">${ic('x')}</button></div>
+  <div class="m-body">
+    <div class="field"><label for="f-title">ชื่อคอนเทนต์</label><input class="input" id="f-title" name="title" required value="${esc(c.title)}" placeholder="เช่น รีวิวกันแดดสูตรใหม่ ใช้จริง 7 วัน"></div>
+    <div class="grid2">
+      <div class="field"><label for="f-type">ประเภท</label><select class="select" id="f-type" name="type">${Object.entries(TYPES).map(([k, v]) => `<option value="${k}" ${k === c.type ? 'selected' : ''}>${v}</option>`).join('')}</select></div>
+      <div class="field"><label for="f-pillar">หมวด</label><select class="select" id="f-pillar" name="pillar">${PILLARS.map(p => `<option ${p === c.pillar ? 'selected' : ''}>${p}</option>`).join('')}</select></div>
+      <div class="field"><label for="f-date">วันที่ลง</label><input class="input" type="date" id="f-date" name="date" required value="${d}"></div>
+      <div class="field"><label for="f-time">เวลา</label><input class="input" type="time" id="f-time" name="time" required value="${t}"></div>
+      <div class="field"><label for="f-owner">ผู้รับผิดชอบ</label><select class="select" id="f-owner" name="owner" ${owners.length < 2 ? 'disabled' : ''}>${owners.map(u => `<option value="${u.id}" ${u.id === c.owner ? 'selected' : ''}>${esc(u.nick)} · ${esc(u.title)}</option>`).join('')}</select>${owners.length < 2 ? '<span class="hint">ครีเอเตอร์สร้างงานให้ตัวเองเท่านั้น</span>' : ''}</div>
+      <div class="field"><label for="f-asset">ลิงก์ไฟล์งาน</label><input class="input" id="f-asset" name="asset" value="${esc(c.asset)}" placeholder="Google Drive / Canva / Frame.io"></div>
+    </div>
+    <div class="field"><span class="lbl">ช่องทาง</span><span class="hint">ป้ายสีบอกว่าระบบจะโพสต์ให้อัตโนมัติ หรือต้องโพสต์เอง ตามประเภทงานที่เลือก</span><div class="ch-pick" id="f-chs">${chOptions(c.type, c.channels)}</div></div>
+    <div class="field"><label for="f-cap">แคปชัน</label><textarea class="textarea" id="f-cap" name="caption" placeholder="แคปชันหลัก ใช้ร่วมทุกช่องทาง">${esc(c.caption)}</textarea><span class="hint" id="f-cap-hint"></span></div>
+    <p class="small" id="f-err" style="color:var(--bad)" hidden></p>
+  </div>
+  <div class="m-foot"><button type="button" class="btn" data-act="mclose">ยกเลิก</button>${M.id ? '' : '<button type="submit" class="btn" name="as" value="idea">บันทึกเป็นไอเดีย</button>'}<button type="submit" class="btn primary" name="as" value="save">${M.id ? 'บันทึก' : 'สร้างและเริ่มทำ'}</button></div></form>`;
+}
+function connectHTML(ch) {
+  const c = CH[ch];
+  return `<form data-form="connect" data-ch="${ch}"><div class="m-head">${chb(ch, true)}<h2>เชื่อมต่อ ${c.name}</h2><button type="button" class="btn icon ghost" data-act="mclose" style="margin-left:auto" aria-label="ปิด">${ic('x')}</button></div>
+  <div class="m-body">
+    <p>ในระบบจริง ปุ่มนี้จะพาไปหน้าล็อกอินของ ${c.name} (OAuth) ให้เลือกบัญชีและกดอนุญาตสิทธิ์ต่อไปนี้ จากนั้นระบบเก็บ token ไว้ฝั่งเซิร์ฟเวอร์และต่ออายุให้อัตโนมัติ</p>
+    <div class="caption-box num" style="font-size:12.5px">${c.scopes.map(esc).join('\n')}</div>
+    <div class="req">${ic('info', 'sm')} ${c.req}</div>
+    <div class="field"><label for="cn-acc">ชื่อบัญชี / เพจที่จะเชื่อม</label><input class="input" id="cn-acc" name="account" required value="${ch === 'x' ? '@brand_th' : 'บัญชีแบรนด์'}"></div>
+  </div>
+  <div class="m-foot"><button type="button" class="btn" data-act="mclose">ยกเลิก</button><button type="submit" class="btn primary">${ic('link', 'sm')}จำลองการเชื่อมต่อ</button></div></form>`;
+}
+function metricsHTML(M) {
+  const c = getC(M.id), ch = M.ch, m = c.metrics[ch] || {};
+  return `<form data-form="metrics"><div class="m-head">${chb(ch, true)}<div><h2>กรอกผลลัพธ์ ${CH[ch].name}</h2><div class="small muted">${esc(c.title)}</div></div><button type="button" class="btn icon ghost" data-act="mclose" style="margin-left:auto" aria-label="ปิด">${ic('x')}</button></div>
+  <div class="m-body"><p class="small muted">${CH[ch].name} ไม่มี API ให้ดึงสถิติ เปิดหน้าสถิติในแอปแล้วกรอกตัวเลขล่าสุด ระบบจะติดป้ายว่า “กรอกเอง” ในรายงาน</p>
+    <div class="grid2">${CH[ch].fields.map(k => `<div class="field"><label for="mt-${k}">${FIELDS[k]}</label><input class="input num" type="number" min="0" id="mt-${k}" name="${k}" value="${m[k] ?? ''}" required></div>`).join('')}</div></div>
+  <div class="m-foot"><button type="button" class="btn" data-act="mclose">ยกเลิก</button><button type="submit" class="btn primary">บันทึกตัวเลข</button></div></form>`;
+}
+function publishingHTML(M) {
+  const c = getC(M.id);
+  const rows = c.channels.map((ch, i) => { const r = c.results[ch]; let st;
+    if (i >= M.step) st = '<span class="faint"><span class="spin"></span> กำลังส่ง…</span>';
+    else st = r.state === 'posted' ? '<span style="color:var(--ok)">โพสต์สำเร็จ</span>' : r.state === 'draft-sent' ? '<span style="color:var(--warn)">ส่งเป็นแบบร่างในแอป</span>' : `<span style="color:var(--bad)">ต้องโพสต์เอง · ${esc(r.reason)}</span>`;
+    return `<div class="prog-row">${chb(ch)}<b>${CH[ch].name}</b><span class="st">${st}</span></div>`; }).join('');
+  const vals = Object.values(c.results);
+  const nAuto = vals.filter(r => r.state === 'posted').length, nMan = vals.length - nAuto;
+  return `<div class="m-head"><h2>${M.done ? 'เผยแพร่แล้ว' : 'กำลังเผยแพร่…'}</h2></div>
+  <div class="m-body"><b>${esc(c.title)}</b><div>${rows}</div>
+  ${M.done ? `<div class="banner${nMan ? ' warn' : ''}">${ic(nMan ? 'hand' : 'check')}<div>โพสต์อัตโนมัติ ${nAuto} ช่องทาง${nMan ? ` · อีก ${nMan} ช่องทางต้องโพสต์เอง ระบบสร้างงานไว้ในแท็บ “ต้องโพสต์เอง” แล้ว` : ''}</div></div>` : ''}</div>
+  ${M.done ? `<div class="m-foot">${nMan ? '<button class="btn" data-act="gomanual">ไปที่งานโพสต์เอง</button>' : ''}<button class="btn primary" data-act="mclose">เสร็จสิ้น</button></div>` : ''}`;
+}
+
+/* ---------- mutations ---------- */
+function doPublish(c, silent) {
+  c.status = 'published';
+  if (parse(c.date) > NOW()) c.date = toLocal(NOW());
+  c.results = {}; c.metrics = {};
+  for (const ch of c.channels) { const m = publishMode(ch, c.type);
+    c.results[ch] = m.mode === 'auto' ? { state: 'posted', url: CH[ch].url, at: toLocal(NOW()) } : { state: m.mode === 'draft' ? 'draft-sent' : 'manual-todo', reason: m.reason }; }
+  if (!silent) log('เผยแพร่', c.id);
+  else S.log.unshift({ at: toLocal(NOW()), uid: c.owner, text: 'โพสต์ตามเวลาที่ตั้งไว้', cid: c.id });
+}
+function syncMetrics(only) {
+  let n = 0; const chs = new Set();
+  for (const c of S.content) { if (c.status !== 'published' || (only && c.id !== only)) continue;
+    const rnd = rngOf(c.id + Date.now()); const age = Math.max(1, daysBetween(parse(c.date), NOW()));
+    for (const ch of c.channels) { const r = c.results[ch]; if (!r || !['posted', 'manual-done'].includes(r.state) || !statsOk(ch)) continue;
+      const m = c.metrics[ch];
+      if (m && m.src === 'api') { for (const k of Object.keys(FIELDS)) if (m[k] != null) m[k] = Math.round(m[k] * (1 + rnd() * .05)); m.at = toLocal(NOW()); }
+      else c.metrics[ch] = { ...genMetrics(c, ch, rnd, Math.max(age, 1)), src: 'api', at: toLocal(NOW()) };
+      n++; chs.add(ch); } }
+  S.lastSync = toLocal(NOW());
+  return { n, chs: chs.size };
+}
+function runScheduled() {
+  let n = 0;
+  for (const c of S.content) if (c.status === 'scheduled' && parse(c.date) <= NOW()) { doPublish(c, true); n++; }
+  if (n) { save(); toast(`โพสต์ตามเวลาที่ตั้งไว้ ${n} ชิ้น`); render(); }
+}
+
+/* ---------- actions ---------- */
+const ACT = {
+  login(_, id) { S.uid = id; save(); location.hash = '#overview'; render(); window.scrollTo(0, 0); },
+  logout() { S.uid = null; UI.drawer = null; UI.modal = null; save(); render(); },
+  theme() { document.documentElement.dataset.theme = effectiveTheme() === 'dark' ? 'light' : 'dark'; render(); },
+  menu() { UI.menu = !UI.menu; render(); },
+  open(_, id, focus) { UI.drawer = { id, focus }; UI.anim = true; render(); if (focus === 'changes') setTimeout(() => $(`#cmt-${id}`)?.focus(), 50); },
+  close() { UI.drawer = null; render(); },
+  mclose() { UI.modal = null; render(); },
+  fav(_, id) { const c = getC(id); const i = c.fav.indexOf(S.uid); i >= 0 ? c.fav.splice(i, 1) : c.fav.push(S.uid); save(); toast(i >= 0 ? 'นำออกจากรายการโปรดแล้ว' : 'เพิ่มในรายการโปรดแล้ว'); render(); },
+  new(_, date) { UI.modal = { kind: 'editor', date }; UI.anim = true; render(); $('#f-title')?.focus(); updateCapHint(); },
+  edit(_, id) { UI.modal = { kind: 'editor', id }; UI.anim = true; render(); updateCapHint(); },
+  status(_, id, st) { const c = getC(id); c.status = st; log(st === 'draft' ? 'เริ่มทำงาน' : `เปลี่ยนสถานะเป็น ${ST[st].label}`, id); save(); render(); },
+  submit(_, id) { const c = getC(id); c.status = 'review'; log('ส่งคอนเทนต์ให้อนุมัติ', id); save(); toast('ส่งให้หัวหน้าอนุมัติแล้ว'); render(); },
+  approve(_, id) { const c = getC(id); c.status = 'approved'; log('อนุมัติ', id); save(); toast('อนุมัติแล้ว กดเผยแพร่หรือตั้งเวลาได้เลย'); render(); },
+  reqchanges(_, id) { const inp = $(`#cmt-${id}`); const text = inp?.value.trim();
+    if (!text) { inp?.focus(); inp?.setAttribute('placeholder', 'พิมพ์สิ่งที่ต้องแก้ก่อน แล้วกด “ขอแก้ไข” อีกครั้ง'); toast('พิมพ์สิ่งที่ต้องแก้ในช่องความคิดเห็นก่อน'); return; }
+    const c = getC(id); c.comments.push({ uid: S.uid, text, at: toLocal(NOW()) }); c.status = 'changes'; log('ขอแก้ไข', id); save(); toast(`ส่งกลับให้ ${user(c.owner).nick} แก้แล้ว`); render(); },
+  schedule(_, id) { const c = getC(id); if (parse(c.date) <= NOW()) { toast('เวลาที่กำหนดผ่านไปแล้ว แก้วันเวลาก่อน หรือกดเผยแพร่ตอนนี้'); return; } c.status = 'scheduled'; log(`ตั้งเวลาโพสต์ ${fmtDT(c.date)}`, id); save(); toast(`ตั้งเวลาแล้ว ระบบจะโพสต์ ${fmtDT(c.date)}`); render(); },
+  unschedule(_, id) { const c = getC(id); c.status = 'approved'; log('ยกเลิกการตั้งเวลา', id); save(); render(); },
+  publish(_, id) { const c = getC(id); doPublish(c); save(); UI.modal = { kind: 'publishing', id, step: 0, done: false }; UI.anim = true; render();
+    const tick = () => { if (!UI.modal || UI.modal.id !== id) return; UI.modal.step++; if (UI.modal.step >= c.channels.length) UI.modal.done = true; render(); if (!UI.modal.done) setTimeout(tick, 550); };
+    setTimeout(tick, 650); },
+  gomanual() { UI.modal = null; UI.drawer = null; UI.apTab = 'manual'; location.hash = '#approvals'; render(); },
+  aptab(_, t) { UI.apTab = t; if (currentView() === 'approvals') render(); },
+  copy(_, id) { const c = getC(id); const done = () => toast('คัดลอกแคปชันแล้ว');
+    try { navigator.clipboard.writeText(c.caption).then(done, () => toast('คัดลอกไม่ได้ ลองเลือกข้อความในกล่องแคปชันแทน')); } catch (e) { toast('คัดลอกไม่ได้ ลองเลือกข้อความในกล่องแคปชันแทน'); } },
+  mdone(_, id, ch) { const inp = $(`#url-${id}-${ch}`); const url = inp?.value.trim();
+    if (!url || !/^https?:\/\//.test(url)) { inp?.focus(); toast('วางลิงก์โพสต์ที่ขึ้นต้นด้วย https:// เพื่อปิดงาน'); return; }
+    const c = getC(id); c.results[ch] = { state: 'manual-done', url, at: toLocal(NOW()), by: S.uid };
+    if (statsOk(ch)) c.metrics[ch] = { ...genMetrics(c, ch, rngOf(id + ch), 1), src: 'api', at: toLocal(NOW()) };
+    log(`ยืนยันโพสต์เองที่ ${CH[ch].name}`, id); save(); toast(statsOk(ch) ? 'ปิดงานแล้ว ระบบจะดึงสถิติจากลิงก์นี้' : 'ปิดงานแล้ว อย่าลืมกรอกตัวเลขผลลัพธ์ภายหลัง'); render(); },
+  metrics(_, id, ch) { UI.modal = { kind: 'metrics', id, ch }; UI.anim = true; render(); },
+  sync(_, id) { const r = syncMetrics(id); save(); toast(id ? `อัปเดตสถิติแล้ว ${r.n} ช่องทาง` : `อัปเดตสถิติจาก ${r.chs} ช่องทาง รวม ${r.n} โพสต์`); render(); },
+  range(_, d) { UI.range = +d; render(); },
+  calmove(_, d) { const n = +d; const now = NOW(); if (!n) { UI.cal = { y: now.getFullYear(), m: now.getMonth() }; UI.calDay = dayKey(now); } else { const t = new Date(UI.cal.y, UI.cal.m + n, 1); UI.cal = { y: t.getFullYear(), m: t.getMonth() }; } render(); },
+  calday(_, k) { UI.calDay = k; render(); },
+  connect(_, ch) { UI.modal = { kind: 'connect', ch }; UI.anim = true; render(); },
+  disconnect(_, ch) { S.channels[ch].connected = false; S.channels[ch].account = ''; log(`ตัดการเชื่อมต่อ ${CH[ch].name}`); save(); toast(`ตัดการเชื่อมต่อ ${CH[ch].name} แล้ว โพสต์ใหม่ไปช่องทางนี้จะกลายเป็นงานโพสต์เอง`); render(); },
+  reset() { UI.modal = { kind: 'reset' }; UI.anim = true; render(); },
+  doreset() { const uidKeep = S.uid; S = seed(); S.uid = uidKeep; UI.modal = null; UI.drawer = null; save(); toast('รีเซ็ตข้อมูลตัวอย่างแล้ว'); render(); },
+};
+const FORMS = {
+  comment(f) { const text = f.elements.text.value.trim(); if (!text) return; const c = getC(f.dataset.id); c.comments.push({ uid: S.uid, text, at: toLocal(NOW()) }); save(); render(); },
+  editor(f, submitter) {
+    const fd = new FormData(f); const chs = fd.getAll('ch'); const err = $('#f-err');
+    const title = (fd.get('title') || '').trim();
+    if (!title) { err.hidden = false; err.textContent = 'ใส่ชื่อคอนเทนต์ก่อนบันทึก'; return; }
+    if (!chs.length) { err.hidden = false; err.textContent = 'เลือกอย่างน้อย 1 ช่องทาง'; return; }
+    const M = UI.modal; const data = { title, type: fd.get('type'), pillar: fd.get('pillar'), date: `${fd.get('date')}T${fd.get('time')}`, owner: fd.get('owner') || S.uid, channels: CH_ORDER.filter(c => chs.includes(c)), caption: fd.get('caption') || '', asset: fd.get('asset') || '' };
+    if (M.id) { Object.assign(getC(M.id), data); log('แก้ไขคอนเทนต์', M.id); toast('บันทึกแล้ว'); }
+    else { const c = { id: uid(), ...data, status: submitter?.value === 'idea' ? 'idea' : 'draft', fav: [], comments: [], results: {}, metrics: {} }; S.content.push(c); log('สร้างคอนเทนต์ใหม่', c.id); UI.drawer = { id: c.id }; toast('สร้างคอนเทนต์แล้ว'); }
+    UI.modal = null; save(); render();
+  },
+  connect(f) { const ch = f.dataset.ch; S.channels[ch].connected = true; S.channels[ch].account = f.elements.account.value.trim() || 'บัญชีแบรนด์'; log(`เชื่อมต่อ ${CH[ch].name}`); UI.modal = null; save(); toast(`เชื่อมต่อ ${CH[ch].name} แล้ว โพสต์ถัดไปจะส่งผ่าน API`); render(); },
+  metrics(f) { const { id, ch } = UI.modal; const c = getC(id); const m = { views: null, likes: null, comments: null, shares: null, clicks: null };
+    for (const k of CH[ch].fields) m[k] = Math.max(0, Number(f.elements[k].value) || 0);
+    c.metrics[ch] = { ...m, src: 'manual', at: toLocal(NOW()) }; log(`กรอกผลลัพธ์ ${CH[ch].name}`, id); UI.modal = null; save(); toast('บันทึกตัวเลขแล้ว'); render(); },
+};
+const CHANGE = {
+  calCh: v => UI.calCh = v, calSt: v => UI.calSt = v, calMine: (v, el) => UI.calMine = el.checked, sort: v => UI.sort = v,
+  libSt: v => { UI.libSt = v; return 'lib'; }, libCh: v => { UI.libCh = v; return 'lib'; }, libOwner: v => { UI.libOwner = v; return 'lib'; },
+  audit: (v, el) => { S.channels.tiktok.audited = el.checked; save(); toast(el.checked ? 'TikTok: โพสต์ตรงได้แล้ว (Direct Post)' : 'TikTok: กลับไปส่งเป็นแบบร่างใน Inbox'); },
+  role: (v, el, id) => { const u = user(id); u.role = v; log(`เปลี่ยนบทบาท ${u.nick} เป็น ${ROLES[v].label}`); save(); toast(`${u.nick} เป็น${ROLES[v].label}แล้ว`); },
+};
+function updateCapHint() {
+  const ta = $('#f-cap'), h = $('#f-cap-hint'); if (!ta || !h) return;
+  const n = [...ta.value].length; const chs = $$('#f-chs input:checked').map(i => i.value);
+  h.textContent = `${n} ตัวอักษร` + (chs.includes('x') && n > 280 ? ' · เกิน 280 ตัวอักษรของ X ต้องตัดให้สั้นลงสำหรับ X' : '');
+  h.style.color = chs.includes('x') && n > 280 ? 'var(--warn)' : '';
+}
+
+/* ---------- events ---------- */
+document.addEventListener('click', e => {
+  const el = e.target.closest('[data-act]'); if (!el || !el.dataset.act) return;
+  const [a, ...args] = el.dataset.act.split(':');
+  if (!ACT[a]) return;
+  if (el.tagName !== 'A') e.preventDefault();
+  e.stopPropagation();
+  ACT[a](el, ...args);
+});
+document.addEventListener('submit', e => { e.preventDefault(); const f = e.target; FORMS[f.dataset.form]?.(f, e.submitter); });
+document.addEventListener('change', e => {
+  const el = e.target;
+  if (el.closest('#f-chs') || el.id === 'f-type') {
+    if (el.id === 'f-type') { const sel = $$('#f-chs input:checked').map(i => i.value); $('#f-chs').innerHTML = chOptions(el.value, sel); }
+    updateCapHint(); return;
+  }
+  const key = el.dataset.change; if (!key) return;
+  const [k, arg] = key.split(':');
+  const res = CHANGE[k]?.(el.value, el, arg);
+  if (res === 'lib') { $('#lib-list').innerHTML = libRows(libList(), 'ไม่พบคอนเทนต์ที่ตรงกับตัวกรอง'); return; }
+  render();
+});
+document.addEventListener('input', e => {
+  const el = e.target;
+  if (el.dataset.input === 'libQ') { UI.libQ = el.value; $('#lib-list').innerHTML = libRows(libList(), 'ไม่พบคอนเทนต์ที่ตรงกับตัวกรอง'); }
+  if (el.id === 'f-cap') updateCapHint();
+});
+document.addEventListener('keydown', e => { if (e.key === 'Escape') { if (UI.modal && !(UI.modal.kind === 'publishing' && !UI.modal.done)) { UI.modal = null; render(); } else if (UI.drawer) { UI.drawer = null; render(); } else if (UI.menu) { UI.menu = false; render(); } } });
+window.addEventListener('hashchange', () => { UI.menu = false; UI.drawer = null; render(); window.scrollTo(0, 0); });
+matchMedia('(prefers-color-scheme: dark)').addEventListener?.('change', () => render());
+
+runScheduled();
+setInterval(runScheduled, 30000);
+render();
+})();
+</script>
+
+</body>
+</html>
