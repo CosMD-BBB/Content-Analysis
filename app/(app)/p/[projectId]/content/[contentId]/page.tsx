@@ -6,6 +6,7 @@ import { Gallery } from "@/components/gallery";
 import { Icon } from "@/components/icon";
 import { MediaUploader } from "@/components/media-uploader";
 import { PlatformPreview } from "@/components/platform-preview";
+import { ManualPostRow, PublishButton } from "@/components/publish-controls";
 import { StatusSteps } from "@/components/status-steps";
 import { canEditContent } from "@/src/access/permissions";
 import { CATALOG, publishMode } from "@/src/channels/catalog";
@@ -52,7 +53,12 @@ export default async function ContentPage({ params }: { params: Promise<{ projec
         </div>
         <div className="actions"><FavoriteButton projectId={projectId} contentId={c.id} on={d.favorite} /></div>
       </div>
-      <ContentActions projectId={projectId} contentId={c.id} actions={acts} />
+      <ContentActions
+        projectId={projectId}
+        contentId={c.id}
+        actions={acts}
+        publishSlot={<PublishButton projectId={projectId} contentId={c.id} manualCount={d.channels.filter((x) => publishMode(ctx.channels.find((k) => k.platform === x.platform), c.format, wt).mode === "manual").length} />}
+      />
       <div className="detail">
         <div style={{ display: "flex", flexDirection: "column", gap: 20, minWidth: 0 }}>
           <section className="card">
@@ -100,6 +106,9 @@ export default async function ContentPage({ params }: { params: Promise<{ projec
                         </>
                       )}
                     </div>
+                    {published && x.publishState === "manual_todo" && ctx.can("manual") && (ctx.can("editAny") || d.isOwner) && (
+                      <ManualPostRow projectId={projectId} ccId={x.id} caption={x.captionOverride || c.caption} platformName={CATALOG[x.platform].name} platformUrl={CATALOG[x.platform].url} files={d.media.map((m, i) => ({ href: `/files/${m.storageKey}`, label: `ไฟล์ ${i + 1}` }))} />
+                    )}
                   </div>
                 </div>
               );

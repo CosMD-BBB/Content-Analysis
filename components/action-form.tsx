@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState, useEffect, useRef } from "react";
+import { useActionState, useRef } from "react";
 import { errText } from "@/src/i18n/th";
 import type { ActionResult } from "@/src/server/act";
 import { toast } from "./toast";
@@ -17,14 +17,16 @@ export function ActionForm({
   resetOnSuccess?: boolean;
   id?: string;
 }) {
-  const [state, formAction, pending] = useActionState(action, undefined);
   const ref = useRef<HTMLFormElement>(null);
-  useEffect(() => {
-    if (state?.ok) {
-      if (success || state.message) toast(state.message ?? success!);
+  // แสดงข้อความทันทีที่ action เสร็จ (ฟอร์มอาจหายไปหลังหน้ารีเฟรช เช่น งานย้ายไปแท็บอื่น)
+  const [state, formAction, pending] = useActionState(async (s: ActionResult, f: FormData) => {
+    const r = await action(s, f);
+    if (r?.ok) {
+      if (r.message || success) toast(r.message ?? success!);
       if (resetOnSuccess) ref.current?.reset();
     }
-  }, [state, success, resetOnSuccess]);
+    return r;
+  }, undefined);
   return (
     <form ref={ref} action={formAction} className={className} style={style} id={id} aria-busy={pending}>
       {children}
