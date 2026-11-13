@@ -460,3 +460,14 @@ a.tile:hover { border-color: var(--accent); }
 .bell-n { position: absolute; top: 2px; right: 2px; background: var(--bad); color: #fff; font-size: 10px; font-weight: 700; border-radius: 999px; min-width: 16px; height: 16px; display: grid; place-items: center; padding: 0 4px; }
 .bell-menu { left: auto; right: 0; width: min(360px, 90vw); max-height: 70vh; overflow-y: auto; }
 .bell-menu a.unread { background: var(--accent-soft); }
+.metrics-form { display: flex; flex-wrap: wrap; gap: 8px; align-items: flex-end; }
+.metrics-form .field { width: 96px; }
+.daybars { display: grid; align-items: end; gap: 2px; height: 160px; min-width: 100%; }
+.daybar { height: 100%; display: flex; align-items: flex-end; background: var(--surface-2); border-radius: 3px; overflow: hidden; }
+.daybar i { display: block; width: 100%; background: var(--accent); border-radius: 3px 3px 0 0; }
+.daybar:hover i { filter: brightness(1.15); }
+.daybar-axis { display: flex; justify-content: space-between; font-size: 11.5px; color: var(--faint); font-family: var(--f-mono); margin-top: 6px; }
+.heat { border-collapse: separate; border-spacing: 2px; font-size: 11px; color: var(--faint); }
+.heat th { font-weight: 500; padding: 0 4px; font-family: var(--f-mono); text-align: center; }
+.heat tbody th { text-align: right; font-family: var(--f-body); }
+.heat td { width: 22px; height: 18px; border-radius: 3px; background: var(--surface-2); }
