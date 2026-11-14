@@ -1,0 +1,39 @@
+# รันทั้งระบบในเครื่อง (Mac / Windows / Linux ที่มี Docker Desktop)
+#   เปิด:            docker compose -f docker-compose.local.yml up -d --build
+#   ใส่ข้อมูลตัวอย่าง:  docker compose -f docker-compose.local.yml exec web node dist/scripts/seed-demo.mjs
+#   ปิด:             docker compose -f docker-compose.local.yml down
+# แล้วเปิด http://localhost:3000
+services:
+  db:
+    image: postgres:16
+    environment:
+      POSTGRES_USER: content
+      POSTGRES_PASSWORD: content
+      POSTGRES_DB: content_studio
+    volumes: [localdb:/var/lib/postgresql/data]
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U content"]
+      interval: 5s
+      retries: 20
+
+  web:
+    build: .
+    ports: ["3000:3000"]
+    environment:
+      DATABASE_URL: postgres://content:content@db:5432/content_studio
+      APP_URL: http://localhost:3000
+    volumes: [localuploads:/data/uploads]
+    depends_on:
+      db: { condition: service_healthy }
+
+  worker:
+    build: .
+    command: ["node", "dist/worker/index.mjs"]
+    environment:
+      DATABASE_URL: postgres://content:content@db:5432/content_studio
+    depends_on:
+      web: { condition: service_healthy }
+
+volumes:
+  localdb:
+  localuploads:

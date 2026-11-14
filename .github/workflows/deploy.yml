@@ -1,0 +1,31 @@
+name: Deploy
+# ทุกครั้งที่ push เข้า main: ssh เข้า Hostinger VPS แล้วอัปเดตระบบ
+# ตั้ง Secrets ใน GitHub: VPS_HOST, VPS_USER, VPS_SSH_KEY (ดู docs/deploy.md)
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+concurrency: deploy
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    env:
+      VPS_HOST: ${{ secrets.VPS_HOST }}
+    steps:
+      - name: Skip until the VPS is set up
+        if: env.VPS_HOST == ''
+        run: echo "ยังไม่ได้ตั้ง Secrets ของ VPS (ดู docs/deploy.md ขั้นที่ 9) จึงข้ามการ deploy"
+      - name: Deploy over SSH
+        if: env.VPS_HOST != ''
+        uses: appleboy/ssh-action@v1.2.0
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USER }}
+          key: ${{ secrets.VPS_SSH_KEY }}
+          script: |
+            set -e
+            cd /opt/content-studio
+            git fetch origin main
+            git reset --hard origin/main
+            docker compose -f docker-compose.prod.yml up -d --build
+            docker image prune -f
