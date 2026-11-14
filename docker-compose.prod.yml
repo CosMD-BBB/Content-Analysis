@@ -19,6 +19,7 @@ services:
     env_file: .env
     environment:
       DATABASE_URL: postgres://${POSTGRES_USER:-content}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB:-content_studio}
+      UPLOAD_DIR: /data/uploads
     volumes: [uploads:/data/uploads]
     depends_on:
       db: { condition: service_healthy }
